@@ -121,7 +121,7 @@ function Index() {
         <div className="mx-auto grid min-h-[650px] max-w-7xl items-center lg:grid-cols-[0.85fr_1.15fr]">
           <div className="order-2 px-6 py-16 sm:px-10 lg:order-1 lg:px-16">
             <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#8a4ba4]">The new Serenity edit</p>
-            <h1 className="mt-5 max-w-xl font-serif text-5xl leading-[0.98] text-[#32133f] sm:text-6xl lg:text-7xl">Fashion that feels like you.</h1>
+            <h1 className="hero-fashion-title mt-5 max-w-xl text-5xl leading-[0.98] text-[#32133f] sm:text-6xl lg:text-7xl">Fashion that feels like you.</h1>
             <p className="mt-6 max-w-lg text-base leading-7 text-[#66536c]">Discover elegant African-inspired pieces, occasion wear and everyday favourites designed to make you feel confident, feminine and beautifully yourself.</p>
             <div className="mt-8 flex flex-wrap gap-3"><a href="#shop" className="rounded-full bg-[#5b2475] px-7 py-3.5 text-sm font-semibold text-white hover:bg-[#461958]">Shop the collection</a><a href="#collections" className="rounded-full border border-[#6b2b83]/30 bg-white/70 px-7 py-3.5 text-sm font-semibold text-[#4c1d67]">Explore collections</a></div>
           </div>
