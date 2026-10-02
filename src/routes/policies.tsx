@@ -6,74 +6,63 @@ export const Route = createFileRoute("/policies")({
 
 const sections = [
   {
-    title: "Returns Policy",
+    title: "Returns & Exchange",
     body: [
-      "We want you to love your Serenity Wears purchase. If an item arrives damaged, defective, incorrect, or materially different from what was ordered, please contact us as soon as possible after delivery with your order number and clear photographs of the issue.",
-      "Items that are simply unwanted, incorrectly selected, or no longer needed may only be returned where permitted by the applicable consumer law and the specific terms communicated for that product or promotion. Items must be unused, unworn, unwashed, and returned with original tags and packaging where applicable.",
-      "For hygiene-sensitive accessories or items that cannot reasonably be resold for health or hygiene reasons, returns may be excluded unless the item is defective or incorrect.",
-      "Return requests are reviewed before a return is authorised. Customers are responsible for following the return instructions provided by Serenity Wears.",
+      "At Serenity Wears, we want you to feel confident and happy with your purchase. If your order isn't quite right, we're happy to assist with an eligible return or exchange.",
     ],
   },
   {
-    title: "Exchange Policy",
+    title: "Return Period",
     body: [
-      "Where an eligible item does not fit, customers may request an exchange for another available size, subject to stock availability and the applicable return conditions.",
-      "Exchanges are not guaranteed where the requested replacement size or product is unavailable. In that case, Serenity Wears will discuss the available resolution with the customer.",
-      "Items must be unworn, unwashed, undamaged, and returned with original tags and packaging where applicable.",
+      "Items may be returned within 7 days of delivery.",
+      "To be eligible for a return, items must be unworn and unused, be in their original condition, have all original tags attached, be returned in the original packaging where applicable, and have no makeup, perfume, stains, damage, or other signs of wear.",
     ],
   },
   {
-    title: "Refund Policy",
+    title: "Items We Cannot Accept",
     body: [
-      "Serenity Wears does not offer refunds for change-of-mind purchases unless required by applicable law.",
-      "A refund may be considered where a product is confirmed to have a material defect, was damaged before delivery, or the wrong product was supplied, subject to review and applicable consumer-protection requirements.",
-      "Where a refund is approved, it will normally be processed to the original payment method. Processing times may depend on the payment provider or financial institution.",
-      "Nothing in this policy is intended to remove or limit any consumer right that cannot legally be excluded.",
+      "For hygiene and safety reasons, certain items may not be eligible for return, including underwear and intimate items, swimwear where the hygiene seal has been removed, earrings, and items marked as Final Sale.",
     ],
   },
   {
-    title: "Shipping & Delivery Policy",
+    title: "Exchanges",
     body: [
-      "Serenity Wears currently delivers within South Africa using courier delivery. We do not offer collection at this time.",
-      "Delivery fees, free-delivery thresholds, courier partners, and estimated delivery times shown at checkout are demo values until the business confirms its final shipping arrangements.",
-      "Once your order has been dispatched, you may receive tracking or delivery information where available.",
-      "Delivery times are estimates and can be affected by courier delays, public holidays, weather, incorrect address details, or other circumstances outside Serenity Wears' reasonable control.",
-      "Customers are responsible for providing accurate delivery information. Additional charges or delays caused by an incorrect or incomplete address may apply where permitted.",
+      "If you would like to exchange an item for another size or eligible item, please contact us within 7 days of delivery.",
+      "Exchanges are subject to availability. If the requested item is unavailable, you may be offered an alternative or store credit.",
     ],
   },
   {
-    title: "Order Cancellation Policy",
+    title: "Sale Items",
     body: [
-      "Customers may request cancellation as soon as possible after placing an order. A cancellation can only be accepted before the order has entered fulfilment or been handed to the courier.",
-      "Once an order has been dispatched, cancellation may no longer be possible and the normal returns process will apply.",
-      "If a cancellation is accepted and a payment has already been captured, any applicable refund will be processed according to the refund policy and payment provider timelines.",
+      "Items purchased on sale may be exchange-only or final sale, depending on the promotion. Please check the product description before purchasing.",
     ],
   },
   {
-    title: "Payment Policy",
+    title: "Return Shipping",
     body: [
-      "Online orders will be paid through the secure payment gateway connected to the Serenity Wears website.",
-      "Payment is considered successful only after the payment provider confirms the transaction. A payment attempt that fails, expires, or is reversed does not constitute a completed order.",
-      "Serenity Wears will not ask customers to send card numbers, CVV numbers, passwords, or payment PINs through WhatsApp, Instagram, or ordinary email.",
+      "Customers are responsible for the cost of returning an item unless the item received was incorrect, damaged, or faulty.",
+      "We recommend using a tracked delivery service, as Serenity Wears cannot be held responsible for parcels lost while being returned to us.",
     ],
   },
   {
-    title: "Privacy Policy",
+    title: "Refunds",
     body: [
-      "Serenity Wears collects information needed to process orders, provide customer support, deliver products, communicate about orders, and operate the website.",
-      "Depending on the customer's interaction with the website, this may include name, contact details, delivery address, order information, and information supplied when contacting customer support.",
-      "Payment card details should be handled by the selected payment provider rather than stored directly by Serenity Wears unless a lawful and appropriately secured payment architecture requires otherwise.",
-      "Personal information will be handled in accordance with applicable South African privacy and consumer-protection requirements. Where required, customers may request access to, correction of, or deletion of personal information, subject to legal and operational requirements.",
-      "The final privacy notice will be updated with the business's registered details, responsible party/contact details, retention periods, cookie/analytics practices, and any third parties that process customer information before launch.",
+      "Once your return has been received and inspected, we will notify you whether your return has been approved.",
+      "Approved refunds will be processed to the original payment method. Please allow additional processing time depending on your bank or payment provider.",
     ],
   },
   {
-    title: "Terms of Use",
+    title: "Faulty or Incorrect Item",
     body: [
-      "By using the Serenity Wears website, customers agree to use the website lawfully and not to interfere with its operation, attempt unauthorised access, or misuse website content.",
-      "Product images, descriptions, branding, logos, written content, and other original website materials belong to Serenity Wears or are used with permission and may not be reproduced commercially without permission.",
-      "Prices, product availability, promotions, and delivery information may change. The final order total shown at checkout will be the applicable amount for that order, subject to correction of manifest errors and applicable law.",
-      "These website terms are intended as a business draft and should be reviewed and finalised with the business's legal adviser before launch.",
+      "If you receive an incorrect, damaged, or faulty item, please contact us as soon as possible with your order number and photographs of the item.",
+      "We will assess the issue and assist with a replacement, exchange, or refund where applicable.",
+    ],
+  },
+  {
+    title: "How to Start a Return",
+    body: [
+      "To request a return or exchange, please contact us at serenitywearsrsa@gmail.com with your order number, the item(s) you wish to return, the reason for the return, and photographs where applicable.",
+      "We'll provide you with the next steps.",
     ],
   },
 ];
@@ -83,20 +72,20 @@ function Policies() {
     <main className="min-h-screen bg-[#fcf8ff] text-[#261b2d]">
       <header className="border-b border-[#eadff0] bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-6 sm:px-8">
-          <a href="/" className="font-serif text-2xl text-[#3f1655]">Serenity Wears</a>
-          <a href="/" className="text-sm font-semibold text-[#5b2475]">Back to shop</a>
+          <a href="/" className="font-serif text-2xl font-semibold tracking-[-0.03em] text-[#3f1655]">Serenity Wears</a>
+          <a href="/" className="text-sm font-semibold tracking-wide text-[#5b2475]">Back to shop</a>
         </div>
       </header>
       <div className="mx-auto max-w-4xl px-5 py-14 sm:px-8 lg:py-20">
         <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#8a4ba4]">Customer care</p>
-        <h1 className="mt-3 font-serif text-5xl text-[#32133f]">Policies</h1>
+        <h1 className="mt-3 font-serif text-5xl font-semibold tracking-[-0.04em] text-[#32133f]">Returns & Exchange</h1>
         <p className="mt-5 max-w-2xl leading-7 text-[#6f6073]">
-          Draft customer policies for the Serenity Wears online store. These are prepared as a launch draft and should be reviewed against the business's final operations and applicable South African law before publication.
+          Our returns and exchange policy is designed to make your Serenity Wears shopping experience simple and transparent.
         </p>
         <div className="mt-12 space-y-5">
           {sections.map(section => (
             <section key={section.title} className="bg-white p-7 shadow-sm ring-1 ring-[#eadff0] sm:p-9">
-              <h2 className="font-serif text-2xl text-[#32133f]">{section.title}</h2>
+              <h2 className="font-serif text-2xl font-semibold tracking-[-0.02em] text-[#32133f]">{section.title}</h2>
               <div className="mt-4 space-y-3 text-sm leading-7 text-[#66586b]">
                 {section.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               </div>
@@ -104,7 +93,7 @@ function Policies() {
           ))}
         </div>
         <p className="mt-10 text-xs leading-5 text-[#89798e]">
-          Drafting note: this page is not legal advice. Before launch, replace demo shipping/payment details and add the business's legal name, contact details, registered information where applicable, effective date, and any specific rules agreed with the courier and payment provider.
+          This policy should be reviewed against applicable South African consumer-protection requirements and the business's final operating procedures before launch.
         </p>
       </div>
     </main>
