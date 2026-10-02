@@ -119,29 +119,85 @@ function Index() {
         </div>
       </section>
 
-      <section id="collection" className="mx-auto max-w-7xl scroll-mt-20 px-6 py-20 sm:px-10 lg:py-28">
-        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#9c7459]">The Serenity Edit</p>
-            <h2 className="mt-3 font-serif text-4xl sm:text-5xl">Curated for confidence.</h2>
+      <section id="collection" className="scroll-mt-20 bg-[#fffaf6]">
+        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-10 lg:py-28">
+          <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#9c7459]">The Serenity Collection</p>
+            <h2 className="mt-3 font-serif text-4xl sm:text-5xl">Find your signature look.</h2>
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-[#6e5b52]">
+              Explore our curated edit of feminine, African-inspired fashion. New pieces are shared regularly on our Instagram.
+            </p>
           </div>
-          <p className="max-w-md text-sm leading-6 text-[#6e5b52]">From statement pieces to timeless essentials, find styles that celebrate femininity, culture and individuality.</p>
-        </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {[
-            ["Statement", "Bold silhouettes", "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=1000&q=85"],
-            ["Elegance", "Refined occasion wear", "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=1000&q=85"],
-            ["Everyday", "Effortless beauty", "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1000&q=85"],
-          ].map(([title, subtitle, image]) => (
-            <a href="https://www.instagram.com/serenitywearrsa/" key={title} className="group relative overflow-hidden rounded-[2rem] bg-[#e8ddd4]">
-              <div className="aspect-[4/5] bg-cover bg-center transition duration-700 group-hover:scale-105" style={{ backgroundImage: `url("${image}")` }} />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-7 pt-24 text-white">
-                <p className="text-xs uppercase tracking-[0.25em] text-white/70">{subtitle}</p>
-                <h3 className="mt-1 font-serif text-3xl">{title}</h3>
-              </div>
+          <div className="mt-10 flex flex-wrap justify-center gap-2">
+            {["All Styles", "Statement", "Occasion", "Everyday"].map((category, index) => (
+              <a
+                key={category}
+                href="https://www.instagram.com/serenitywearrsa/"
+                target="_blank"
+                rel="noreferrer"
+                className={index === 0
+                  ? "rounded-full bg-[#30231e] px-5 py-2.5 text-xs font-semibold text-white"
+                  : "rounded-full border border-[#30231e]/15 bg-white px-5 py-2.5 text-xs font-semibold text-[#5f4b42] transition hover:border-[#9c7459] hover:text-[#9c7459]"}
+              >
+                {category}
+              </a>
+            ))}
+          </div>
+
+          <div className="mt-12 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["Statement Looks", "Bold pieces designed to make an entrance.", "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?auto=format&fit=crop&w=1200&q=85"],
+              ["Occasion Wear", "Elegant silhouettes for your special moments.", "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=1200&q=85"],
+              ["Everyday Edit", "Effortless styles you can make your own.", "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=85"],
+              ["African-Inspired", "Celebrating print, detail, culture and femininity.", "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1200&q=85"],
+              ["New Arrivals", "Fresh pieces and looks from the latest drop.", "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?auto=format&fit=crop&w=1200&q=85"],
+              ["Serenity Favourites", "Pieces selected to become wardrobe staples.", "https://images.unsplash.com/photo-1550639525-c97d455acf70?auto=format&fit=crop&w=1200&q=85"],
+            ].map(([title, description, image]) => (
+              <a
+                key={title}
+                href="https://www.instagram.com/serenitywearrsa/"
+                target="_blank"
+                rel="noreferrer"
+                className="group overflow-hidden rounded-[1.75rem] bg-white shadow-sm ring-1 ring-[#30231e]/5 transition duration-500 hover:-translate-y-1 hover:shadow-xl"
+              >
+                <div className="aspect-[4/5] overflow-hidden bg-[#e8ddd4]">
+                  <div
+                    className="h-full w-full bg-cover bg-center transition duration-700 group-hover:scale-105"
+                    style={{ backgroundImage: `url("${image}")` }}
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-serif text-2xl text-[#30231e]">{title}</h3>
+                      <p className="mt-2 text-sm leading-6 text-[#6e5b52]">{description}</p>
+                    </div>
+                    <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#30231e]/10 text-lg text-[#9c7459] transition group-hover:bg-[#30231e] group-hover:text-white">
+                      ↗
+                    </span>
+                  </div>
+                  <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-[#9c7459]">View on Instagram</p>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <div className="mt-12 rounded-[2rem] bg-[#30231e] px-7 py-10 text-center text-white sm:px-12">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#e8c9aa]">Shopping made personal</p>
+            <h3 className="mt-3 font-serif text-3xl sm:text-4xl">See a piece you love?</h3>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/70">
+              Send us a DM on Instagram to ask about availability, sizing, pricing and delivery. We are happy to help you find your perfect look.
+            </p>
+            <a
+              href="https://www.instagram.com/serenitywearrsa/"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-7 inline-flex rounded-full bg-[#f4dfcc] px-7 py-3.5 text-sm font-semibold text-[#30231e] transition hover:bg-white"
+            >
+              Browse & Shop on Instagram
             </a>
-          ))}
+          </div>
         </div>
       </section>
 
