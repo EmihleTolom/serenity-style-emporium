@@ -271,13 +271,86 @@ function Index() {
       </section>
 
       <section id="contact" className="scroll-mt-20 bg-[#f1e4d9]">
-        <div className="mx-auto max-w-4xl px-6 py-20 text-center sm:px-10 lg:py-24">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#9c7459]">Your next look awaits</p>
-          <h2 className="mt-4 font-serif text-4xl sm:text-5xl">Ready to find your Serenity?</h2>
-          <p className="mx-auto mt-5 max-w-2xl leading-7 text-[#6e5b52]">Browse our latest pieces, send us a message and let us help you find something that feels beautifully you.</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <a href="https://www.instagram.com/serenitywearrsa/" className="rounded-full bg-[#30231e] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#46342c]">Shop on Instagram</a>
-            <a href="https://wa.me/" className="rounded-full border border-[#30231e]/25 bg-white/50 px-7 py-3.5 text-sm font-semibold text-[#30231e] transition hover:bg-white">Chat on WhatsApp</a>
+        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-10 lg:py-28">
+          <div className="grid gap-12 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#9c7459]">Order &amp; Enquiries</p>
+              <h2 className="mt-4 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl lg:text-6xl">
+                Your next beautiful look starts here.
+              </h2>
+              <p className="mt-6 max-w-xl text-base leading-8 text-[#6e5b52]">
+                Seen something you love? Reach out to us for availability, sizing, pricing and delivery information. We are happy to make your Serenity Wears experience personal.
+              </p>
+
+              <div className="mt-9 flex flex-wrap gap-4">
+                <a
+                  href="https://www.instagram.com/serenitywearrsa/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full bg-[#30231e] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#46342c]"
+                >
+                  Shop on Instagram
+                </a>
+                <a
+                  href="#contact"
+                  className="rounded-full border border-[#30231e]/20 bg-white/60 px-7 py-3.5 text-sm font-semibold text-[#30231e] transition hover:bg-white"
+                >
+                  Make an Enquiry
+                </a>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] bg-white/75 p-7 shadow-sm ring-1 ring-[#30231e]/5 sm:p-9">
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#9c7459]">How to order</p>
+              <div className="mt-7 space-y-6">
+                {[
+                  ["01", "Browse", "Explore our latest pieces on Instagram and find a look you love."],
+                  ["02", "Message us", "Send us a DM with the item you are interested in and any questions you have."],
+                  ["03", "We assist you", "We will help with availability, sizing, pricing, delivery and the next steps."],
+                ].map(([number, title, text]) => (
+                  <div key={number} className="flex gap-5">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f1e4d9] text-xs font-semibold tracking-widest text-[#9c7459]">
+                      {number}
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-xl text-[#30231e]">{title}</h3>
+                      <p className="mt-1 text-sm leading-6 text-[#6e5b52]">{text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 border-t border-[#30231e]/10 pt-7">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <a
+                    href="https://www.instagram.com/serenitywearrsa/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-2xl bg-[#30231e] px-5 py-4 text-center text-sm font-semibold text-white transition hover:bg-[#46342c]"
+                  >
+                    Instagram
+                    <span className="mt-1 block text-xs font-normal text-white/60">@serenitywearrsa</span>
+                  </a>
+                  <div className="rounded-2xl border border-[#30231e]/10 bg-[#f8f3ee] px-5 py-4 text-center">
+                    <p className="text-sm font-semibold text-[#30231e]">WhatsApp</p>
+                    <p className="mt-1 text-xs text-[#6e5b52]">Contact details coming soon</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 grid gap-4 border-t border-[#30231e]/10 pt-10 text-center sm:grid-cols-3">
+            {[
+              ["Delivery", "Ask us about delivery options available for your order."],
+              ["Appointments", "Prefer a personal experience? Contact us to arrange an appointment."],
+              ["Personal Service", "We are here to help you choose something that feels like you."],
+            ].map(([title, text]) => (
+              <div key={title} className="px-4">
+                <h3 className="font-serif text-xl text-[#30231e]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#6e5b52]">{text}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
