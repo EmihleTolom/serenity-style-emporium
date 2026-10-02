@@ -1,13 +1,86 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
 function Index() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <main className="min-h-screen bg-[#f8f3ee] text-[#2c211d]">
-      <section className="relative min-h-[92vh] overflow-hidden">
+      <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#201815]/90 text-white shadow-lg backdrop-blur-md">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-10 lg:px-16">
+          <a href="/" onClick={closeMenu} className="group">
+            <span className="font-serif text-2xl tracking-wide transition group-hover:text-[#e8c9aa]">
+              Serenity Wears
+            </span>
+            <span className="block text-[9px] uppercase tracking-[0.35em] text-[#e8c9aa]">
+              Your Beauty, Our Peace.
+            </span>
+          </a>
+
+          <div className="hidden items-center gap-9 md:flex">
+            <a href="#home" className="text-sm font-medium transition hover:text-[#e8c9aa]">Home</a>
+            <a href="#collection" className="text-sm font-medium transition hover:text-[#e8c9aa]">Collection</a>
+            <a href="#about" className="text-sm font-medium transition hover:text-[#e8c9aa]">About</a>
+            <a href="#contact" className="text-sm font-medium transition hover:text-[#e8c9aa]">Contact</a>
+            <a
+              href="https://www.instagram.com/serenitywearrsa/"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-[#e8c9aa]/70 px-5 py-2.5 text-sm font-semibold text-[#f4dfcc] transition hover:bg-[#e8c9aa] hover:text-[#30231e]"
+            >
+              Shop
+            </a>
+          </div>
+
+          <button
+            type="button"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 md:hidden"
+          >
+            <span className="text-xl">{menuOpen ? "×" : "☰"}</span>
+          </button>
+        </div>
+
+        {menuOpen && (
+          <div className="border-t border-white/10 bg-[#201815] px-6 py-5 md:hidden">
+            <div className="mx-auto flex max-w-7xl flex-col gap-1">
+              {[
+                ["Home", "#home"],
+                ["Collection", "#collection"],
+                ["About", "#about"],
+                ["Contact", "#contact"],
+              ].map(([label, href]) => (
+                <a
+                  key={label}
+                  href={href}
+                  onClick={closeMenu}
+                  className="rounded-xl px-4 py-3 text-sm transition hover:bg-white/5 hover:text-[#e8c9aa]"
+                >
+                  {label}
+                </a>
+              ))}
+              <a
+                href="https://www.instagram.com/serenitywearrsa/"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 rounded-full bg-[#f4dfcc] px-5 py-3 text-center text-sm font-semibold text-[#30231e]"
+              >
+                Shop on Instagram
+              </a>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      <section id="home" className="relative min-h-[92vh] scroll-mt-20 overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -15,7 +88,7 @@ function Index() {
               "linear-gradient(90deg, rgba(31,20,16,.78), rgba(31,20,16,.2)), url('https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=2000&q=85')",
           }}
         />
-        <div className="relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-6 py-24 sm:px-10 lg:px-16">
+        <div className="relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-6 py-24 pt-32 sm:px-10 lg:px-16">
           <div className="max-w-2xl text-white">
             <p className="mb-5 text-sm font-semibold uppercase tracking-[0.35em] text-[#e8c9aa]">Serenity Wears</p>
             <h1 className="font-serif text-5xl leading-[1.02] sm:text-6xl lg:text-8xl">Your Beauty,<br />Our Peace.</h1>
@@ -46,7 +119,7 @@ function Index() {
         </div>
       </section>
 
-      <section id="collection" className="mx-auto max-w-7xl px-6 py-20 sm:px-10 lg:py-28">
+      <section id="collection" className="mx-auto max-w-7xl scroll-mt-20 px-6 py-20 sm:px-10 lg:py-28">
         <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#9c7459]">The Serenity Edit</p>
@@ -72,7 +145,7 @@ function Index() {
         </div>
       </section>
 
-      <section className="bg-[#30231e] text-white">
+      <section id="about" className="scroll-mt-20 bg-[#30231e] text-white">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 sm:px-10 lg:grid-cols-2 lg:py-28">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#e8c9aa]">About Serenity Wears</p>
@@ -89,7 +162,7 @@ function Index() {
         </div>
       </section>
 
-      <section className="bg-[#f1e4d9]">
+      <section id="contact" className="scroll-mt-20 bg-[#f1e4d9]">
         <div className="mx-auto max-w-4xl px-6 py-20 text-center sm:px-10 lg:py-24">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#9c7459]">Your next look awaits</p>
           <h2 className="mt-4 font-serif text-4xl sm:text-5xl">Ready to find your Serenity?</h2>
