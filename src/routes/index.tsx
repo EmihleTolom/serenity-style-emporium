@@ -201,20 +201,72 @@ function Index() {
         </div>
       </section>
 
-      <section id="about" className="scroll-mt-20 bg-[#30231e] text-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 sm:px-10 lg:grid-cols-2 lg:py-28">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#e8c9aa]">About Serenity Wears</p>
-            <h2 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">Where style meets serenity.</h2>
-            <p className="mt-6 max-w-xl leading-8 text-white/75">
-              Serenity Wears is an African-inspired fashion boutique created for women who appreciate beautiful clothing, thoughtful details and the confidence that comes from feeling good in what you wear.
-            </p>
-            <p className="mt-4 max-w-xl leading-8 text-white/75">
-              Whether you are dressing for a special occasion or simply choosing yourself today, every look is an invitation to embrace your beauty.
-            </p>
-            <a href="https://www.instagram.com/serenitywearrsa/" className="mt-8 inline-flex rounded-full border border-[#e8c9aa]/60 px-7 py-3.5 text-sm font-semibold text-[#f4dfcc] transition hover:bg-white/10">Visit us on Instagram</a>
+      <section id="about" className="scroll-mt-20 overflow-hidden bg-[#30231e] text-white">
+        <div className="mx-auto grid max-w-7xl items-stretch lg:grid-cols-2">
+          <div className="relative min-h-[560px] overflow-hidden">
+            <div
+              className="absolute inset-0 bg-cover bg-center transition duration-700 hover:scale-105"
+              style={{ backgroundImage: "url('https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1400&q=85')" }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#201815]/80 via-transparent to-[#201815]/10" />
+            <div className="absolute bottom-8 left-8 right-8 sm:left-12 sm:right-12">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#e8c9aa]">Serenity Wears</p>
+              <p className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Beauty, confidence &amp; culture.</p>
+            </div>
           </div>
-          <div className="min-h-[420px] rounded-[2rem] bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1550639525-c97d455acf70?auto=format&fit=crop&w=1200&q=85')" }} />
+
+          <div className="flex flex-col justify-center px-6 py-20 sm:px-10 lg:px-16 lg:py-28">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#e8c9aa]">Our Story</p>
+            <h2 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">
+              Where style meets serenity.
+            </h2>
+
+            <p className="mt-7 leading-8 text-white/75">
+              Serenity Wears was created from a love for beautiful clothing and the feeling that comes with finding a look that truly feels like you. We believe fashion should be more than what you wear — it should be an expression of your beauty, confidence and individuality.
+            </p>
+
+            <p className="mt-5 leading-8 text-white/75">
+              Our collection brings together feminine silhouettes, African-inspired details and timeless pieces for women who want to feel elegant, comfortable and effortlessly themselves.
+            </p>
+
+            <div className="mt-10 grid gap-6 border-y border-white/10 py-8 sm:grid-cols-3">
+              {[
+                ["01", "Confidence", "Wear what makes you feel beautiful."],
+                ["02", "Culture", "Celebrate style with meaning and identity."],
+                ["03", "Serenity", "Feel good in every piece you choose."],
+              ].map(([number, title, text]) => (
+                <div key={number}>
+                  <p className="text-xs tracking-[0.25em] text-[#e8c9aa]">{number}</p>
+                  <h3 className="mt-2 font-serif text-xl">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/55">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="https://www.instagram.com/serenitywearrsa/"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-9 inline-flex w-fit rounded-full border border-[#e8c9aa]/60 px-7 py-3.5 text-sm font-semibold text-[#f4dfcc] transition hover:bg-[#e8c9aa] hover:text-[#30231e]"
+            >
+              Discover Serenity Wears
+            </a>
+          </div>
+        </div>
+
+        <div className="border-t border-white/10 bg-[#201815]">
+          <div className="mx-auto grid max-w-7xl gap-8 px-6 py-12 text-center sm:px-10 md:grid-cols-3">
+            {[
+              ["Thoughtfully Curated", "Pieces selected with elegance and individuality in mind."],
+              ["Personal Experience", "We are here to help you find a look that feels like you."],
+              ["Made for Her", "Fashion that celebrates the woman you are becoming."],
+            ].map(([title, text]) => (
+              <div key={title}>
+                <h3 className="font-serif text-xl text-[#f4dfcc]">{title}</h3>
+                <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-white/55">{text}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
