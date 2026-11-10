@@ -104,6 +104,7 @@ function Index() {
             <a href="#collections" className="text-sm hover:text-[#71318e]">Collections</a>
             <a href="#about" className="text-sm hover:text-[#71318e]">About</a>
             <a href="#contact" className="text-sm hover:text-[#71318e]">Contact</a>
+            <a href="/policies" className="text-sm hover:text-[#71318e]">Policies</a>
           </nav>
           <div className="flex items-center gap-1">
             <button className="rounded-full p-2.5 hover:bg-[#f4ebf8]" onClick={() => setSearchOpen(v => !v)} aria-label="Search"><Search size={19}/></button>
@@ -114,7 +115,7 @@ function Index() {
           </div>
         </div>
         {searchOpen && <div className="border-t border-[#eadff0] bg-[#fcf8ff] px-5 py-4"><div className="mx-auto flex max-w-3xl items-center gap-3 rounded-full border border-[#d9c8e0] bg-white px-5 py-3"><Search size={18} className="text-[#9565ad]"/><input autoFocus value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search dresses, sets, accessories..." className="w-full bg-transparent text-sm outline-none"/>{searchTerm && <button onClick={() => setSearchTerm("")}><X size={18}/></button>}</div></div>}
-        {menuOpen && <div className="fixed inset-0 z-[70] bg-[#261b2d]/40 md:hidden"><div className="h-full w-[85%] max-w-sm bg-white p-6 shadow-2xl"><div className="flex items-center justify-between"><span className="font-serif text-2xl text-[#3f1655]">Serenity Wears</span><button onClick={() => setMenuOpen(false)}><X/></button></div><nav className="mt-12 flex flex-col gap-7 text-lg">{["Home","Shop","Collections","About","Contact"].map(x => <a key={x} href={"#" + x.toLowerCase()} onClick={() => setMenuOpen(false)}>{x}</a>)}</nav></div></div>}
+        {menuOpen && <div className="fixed inset-0 z-[70] bg-[#261b2d]/40 md:hidden"><div className="h-full w-[85%] max-w-sm bg-white p-6 shadow-2xl"><div className="flex items-center justify-between"><span className="font-serif text-2xl text-[#3f1655]">Serenity Wears</span><button onClick={() => setMenuOpen(false)}><X/></button></div><nav className="mt-12 flex flex-col gap-7 text-lg">{["Home","Shop","Collections","About","Contact","Policies"].map(x => <a key={x} href={x === "Policies" ? "/policies" : "#" + x.toLowerCase()} onClick={() => setMenuOpen(false)}>{x}</a>)}</nav></div></div>}
       </header>
 
       <section id="home" className="relative overflow-hidden bg-[#f3e8f7]">
@@ -156,6 +157,33 @@ function Index() {
       <section id="contact" className="scroll-mt-20 bg-white"><div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-24"><div className="grid gap-10 lg:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[0.3em] text-[#8a4ba4]">Need help?</p><h2 className="mt-3 font-serif text-4xl text-[#32133f] sm:text-5xl">We are here for you.</h2><p className="mt-5 max-w-lg leading-7 text-[#6f6073]">WhatsApp and social media remain available for sizing questions, product queries, appointments and general customer support. Your shopping journey, however, starts and ends here on the website.</p><div className="mt-7 flex flex-wrap gap-3"><a href="https://wa.me/" className="rounded-full bg-[#4c1d67] px-6 py-3 text-sm font-semibold text-white">WhatsApp us</a><a href="https://www.instagram.com/serenitywearrsa?stkn=MXh6YW9tdWdldHB6Zw==" target="_blank" rel="noreferrer" className="rounded-full border border-[#4c1d67]/20 px-6 py-3 text-sm font-semibold text-[#4c1d67]">Instagram</a></div></div><div className="grid gap-3 sm:grid-cols-2">{[
         ["WhatsApp","Queries & customer support","https://wa.me/"],["Instagram","@serenitywearrsa","https://www.instagram.com/serenitywearrsa?stkn=MXh6YW9tdWdldHB6Zw=="],["Facebook","Serenity Wears","https://www.facebook.com/share/19KNienkZR/?mibextid=wwXIfr"],["TikTok","@serenitywearrsa","https://www.tiktok.com/@serenitywears?_r=1&_t=ZS-9AELnyrKRmA"],["Email","serenitywearsrsa@gmail.com","mailto:serenitywearsrsa@gmail.com"]
       ].map(([t,d,h]) => <a key={t} href={h} target={h.startsWith("http") ? "_blank" : undefined} rel={h.startsWith("http") ? "noreferrer" : undefined} className="rounded-2xl border border-[#eadff0] bg-[#fcf8ff] p-6 hover:border-[#c9a7d4]"><p className="font-serif text-xl text-[#3f1655]">{t}</p><p className="mt-2 text-sm text-[#77677c]">{d}</p></a>)}</div></div></div></section>
+
+      <section id="policies" className="scroll-mt-20 bg-[#f7eff9]">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#8a4ba4]">Shopping with confidence</p>
+            <h2 className="mt-3 font-serif text-4xl text-[#32133f] sm:text-5xl">Our store policies</h2>
+            <p className="mt-5 text-sm leading-7 text-[#6f6073]">Find the information you need before placing an order, from returns and delivery to how we look after your personal information.</p>
+          </div>
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Returns & Exchanges","Learn about eligible returns, exchanges, refunds and how to get in touch.","/policies#returns-and-exchange"],
+              ["Delivery & Shipping","Read about courier delivery within South Africa and delivery support.","/policies#delivery-and-shipping"],
+              ["Privacy & Personal Information","Understand what information we collect and how it is used.","/policies#privacy-and-personal-information"],
+              ["Customer Support","Find our customer-care contact details and support information.","/policies#customer-support-and-business-information"]
+            ].map(([title,description,href]) => (
+              <a key={title} href={href} className="group flex min-h-52 flex-col justify-between rounded-2xl border border-[#eadff0] bg-white p-7 transition hover:-translate-y-1 hover:border-[#c9a7d4] hover:shadow-md">
+                <div>
+                  <h3 className="font-serif text-xl text-[#3f1655]">{title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-[#77677c]">{description}</p>
+                </div>
+                <span className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-[#6b2b83]">Read policy <span aria-hidden="true">→</span></span>
+              </a>
+            ))}
+          </div>
+          <p className="mt-8 text-center text-xs text-[#89798e]">Questions about an order? Email <a className="font-semibold text-[#5b2475] underline" href="mailto:serenitywearsrsa@gmail.com">serenitywearsrsa@gmail.com</a>.</p>
+        </div>
+      </section>
 
       <footer className="bg-[#25122d] px-5 py-12 text-white/65"><div className="mx-auto flex max-w-7xl flex-col gap-7 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-serif text-2xl text-white">Serenity Wears</p><p className="mt-1 text-sm">Your Beauty, Our Peace.</p></div><div className="flex flex-wrap items-center gap-5 text-sm"><a href="https://www.instagram.com/serenitywearrsa?stkn=MXh6YW9tdWdldHB6Zw==" target="_blank" rel="noreferrer"><Instagram size={19}/></a><a href="https://wa.me/">WhatsApp</a><a href="https://www.facebook.com/share/19KNienkZR/?mibextid=wwXIfr" target="_blank" rel="noreferrer">Facebook</a><a href="https://www.tiktok.com/@serenitywears?_r=1&_t=ZS-9AELnyrKRmA" target="_blank" rel="noreferrer">TikTok</a><a href="mailto:serenitywearsrsa@gmail.com">Email</a><a href="/policies">Policies</a></div><p className="text-xs">© {new Date().getFullYear()} Serenity Wears</p></div></footer>
 
