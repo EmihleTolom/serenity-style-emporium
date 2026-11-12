@@ -39,6 +39,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/policies': typeof PoliciesRoute
+  '/admin': typeof AdminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -48,9 +49,9 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/policies'
+  fullPaths: '/' | '/policies' | '/admin'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/policies'
+  to: '/' | '/policies' | '/admin'
   id: '__root__' | '/' | '/policies' | '/admin'
   fileRoutesById: FileRoutesById
 }
