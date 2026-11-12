@@ -32,10 +32,14 @@ const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "curren
 
 function Index() {
   const [products, setProducts] = useState<Product[]>(demoProducts);
+  const [productLoadError, setProductLoadError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      setProductLoadError("The product database is not connected. Please check the website settings.");
+      return;
+    }
     let active = true;
     const loadPublishedProducts = async () => {
       const { data, error } = await supabase
@@ -43,7 +47,17 @@ function Index() {
         .select("id, name, description, price, category, sizes, stock_quantity, image_urls, is_published")
         .eq("is_published", true)
         .order("created_at", { ascending: false });
-      if (!active || error || !data) return;
+      if (!active) return;
+      if (error) {
+        console.error("Serenity Wears product loading failed:", error);
+        setProductLoadError(`Products could not be loaded: ${error.message}`);
+        return;
+      }
+      if (!data) {
+        setProductLoadError("No product data was returned from the store database.");
+        return;
+      }
+      setProductLoadError("");
       const liveProducts: Product[] = data.map((item) => ({
         id: item.id,
         name: item.name,
@@ -169,6 +183,7 @@ function Index() {
 
       <section id="shop" className="scroll-mt-20 bg-white"><div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-28">
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.3em] text-[#8a4ba4]">Shop Serenity</p><h2 className="mt-3 font-serif text-4xl text-[#32133f] sm:text-5xl">The latest pieces</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#76677b]">Browse products, choose your size, add your favourites to your bag and check out without leaving the website.</p></div><button onClick={() => setSizeGuideOpen(true)} className="flex items-center gap-2 text-sm font-semibold text-[#5b2475]">Size guide <span>→</span></button></div>
+        {productLoadError && <p role="status" className="mt-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">{productLoadError}</p>}
         <div className="mt-10 flex gap-2 overflow-x-auto pb-2">{["All","Dresses","Sets","Accessories"].map(x => <button key={x} onClick={() => setCategory(x)} className={"shrink-0 rounded-full px-5 py-2.5 text-xs font-semibold " + (category === x ? "bg-[#4c1d67] text-white" : "border border-[#decfe5] bg-white text-[#5d4964]")}>{x}</button>)}</div>
         <div className="mt-9 grid grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-6 lg:grid-cols-3">{filtered.map(p => <article key={p.id} className="group relative">
           <div className="relative aspect-[3/4] overflow-hidden bg-[#f2eaf5]"><button className="h-full w-full" onClick={() => openProduct(p)}><img src={p.image} alt={p.name} className={"h-full w-full object-cover transition duration-700 group-hover:scale-105 " + (p.soldOut ? "opacity-65 grayscale-[0.2]" : "")}/></button>{p.badge && <span className="absolute left-3 top-3 bg-[#5b2475] px-3 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-white">{p.badge}</span>}{p.soldOut && <span className="absolute inset-x-3 bottom-3 bg-white/95 px-3 py-2 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-[#3f1655]">Sold out</span>}</div>
