@@ -57,7 +57,7 @@ function Index() {
         setProductLoadError("No product data was returned from the store database.");
         return;
       }
-      setProductLoadError("");
+      setProductLoadError(data.length === 0 ? "The database connection is working, but it returned no published products. We need to check the product record and its publication status." : "");
       const liveProducts: Product[] = data.map((item) => ({
         id: item.id,
         name: item.name,
