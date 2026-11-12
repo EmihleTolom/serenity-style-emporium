@@ -1,6 +1,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { Heart, Instagram, Menu, Minus, Plus, Search, ShoppingBag, Trash2, X } from "lucide-react";
 import adannaDress from "../assets/adanna-dress.jpg";
 import amahleDress from "../assets/amahle-dress.jpg";
@@ -12,13 +13,13 @@ import zuriKaftan from "../assets/zuri-kaftan.jpg";
 export const Route = createFileRoute("/")({ component: Index });
 
 type Product = {
-  id: number; name: string; category: "Dresses" | "Sets" | "Accessories";
+  id: string | number; name: string; category: string;
   price: number; image: string; description: string; sizes: string[]; badge?: string;
   oldPrice?: number; soldOut?: boolean;
 };
 type CartItem = Product & { size: string; quantity: number };
 
-const products: Product[] = [
+const demoProducts: Product[] = [
   { id: 1, name: "Adanna Dress", category: "Dresses", price: 1299, image: adannaDress, description: "A feminine statement silhouette designed for elegant occasions.", sizes: ["XS","S","M","L","XL"], badge: "New" },
   { id: 2, name: "Amahle Dress", category: "Dresses", price: 1399, image: amahleDress, description: "A refined occasion dress with a graceful, confident finish.", sizes: ["XS","S","M","L","XL"] },
   { id: 3, name: "Imani Set", category: "Sets", price: 1199, image: imaniSet, description: "A polished two-piece set made for effortless styling.", sizes: ["XS","S","M","L","XL"], badge: "Best Seller" },
@@ -30,7 +31,36 @@ const products: Product[] = [
 const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 function Index() {
+  const [products, setProducts] = useState<Product[]>(demoProducts);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!supabase) return;
+    let active = true;
+    const loadPublishedProducts = async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, description, price, category, sizes, stock_quantity, image_urls, is_published")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
+      if (!active || error || !data) return;
+      const liveProducts: Product[] = data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category || "Dresses",
+        price: Number(item.price),
+        image: item.image_urls?.[0] || adannaDress,
+        description: item.description || "",
+        sizes: item.sizes?.length ? item.sizes : ["One Size"],
+        soldOut: Number(item.stock_quantity ?? 0) <= 0,
+      }));
+      setProducts([...liveProducts, ...demoProducts]);
+    };
+    void loadPublishedProducts();
+    return () => {
+      active = false;
+    };
+  }, []);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [quickView, setQuickView] = useState<Product | null>(null);
@@ -39,8 +69,8 @@ function Index() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<number[]>([]);
-  const [recentlyViewed, setRecentlyViewed] = useState<number[]>([]);
+  const [wishlist, setWishlist] = useState<(string | number)[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<(string | number)[]>([]);
   const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [promo, setPromo] = useState("");
@@ -74,7 +104,7 @@ function Index() {
     });
     setQuickView(null); setCartOpen(true);
   };
-  const changeQty = (id: number, size: string, delta: number) =>
+  const changeQty = (id: string | number, size: string, delta: number) =>
     setCart(current => current.map(i => i.id === id && i.size === size ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0));
 
   const applyPromo = () => {
