@@ -79,8 +79,9 @@ const sections = [
   },
 ];
 
-const sectionId = (title: string) =>
-  title.toLowerCase().replaceAll(" ", "-").replaceAll("&", "and");
+const sectionId = (title: string) => title === "Returns & Exchanges"
+  ? "returns-and-exchange"
+  : title.toLowerCase().replaceAll(" ", "-").replaceAll("&", "and");
 
 function Policies() {
   return (
