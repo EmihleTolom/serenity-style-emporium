@@ -164,7 +164,16 @@ function AdminPage() {
       resetForm();
       await loadProducts();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Something went wrong while saving the product.");
+      const details =
+        error && typeof error === "object"
+          ? [
+              "message" in error ? String(error.message) : "",
+              "details" in error && error.details ? String(error.details) : "",
+              "hint" in error && error.hint ? String(error.hint) : "",
+              "code" in error && error.code ? `Code: ${String(error.code)}` : "",
+            ].filter(Boolean).join(" — ")
+          : String(error || "Unknown error");
+      setMessage(details || "The product could not be saved. Please try again.");
     } finally {
       setBusy(false);
     }
