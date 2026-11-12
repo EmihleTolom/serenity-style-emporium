@@ -6,104 +6,81 @@ export const Route = createFileRoute("/policies")({
 
 const sections = [
   {
-    title: "Returns & Exchange",
+    title: "Returns & Exchanges",
     body: [
-      "At Serenity Wears, we want you to feel confident and happy with your purchase. If your order isn't quite right, we're happy to assist with an eligible return or exchange.",
-    ],
-  },
-  {
-    title: "Return Period",
-    body: [
-      "Items may be returned within 7 days of delivery.",
-      "To be eligible for a return, items must be unworn and unused, be in their original condition, have all original tags attached, be returned in the original packaging where applicable, and have no makeup, perfume, stains, damage, or other signs of wear.",
-    ],
-  },
-  {
-    title: "Items We Cannot Accept",
-    body: [
-      "For hygiene and safety reasons, certain items may not be eligible for return, including underwear and intimate items, swimwear where the hygiene seal has been removed, earrings, and items marked as Final Sale.",
-    ],
-  },
-  {
-    title: "Exchanges",
-    body: [
-      "If you would like to exchange an item for another size or eligible item, please contact us within 7 days of delivery.",
-      "Exchanges are subject to availability. If the requested item is unavailable, you may be offered an alternative or store credit.",
-    ],
-  },
-  {
-    title: "Sale Items",
-    body: [
-      "Items purchased on sale may be exchange-only or final sale, depending on the promotion. Please check the product description before purchasing.",
-    ],
-  },
-  {
-    title: "Return Shipping",
-    body: [
-      "Customers are responsible for the cost of returning an item unless the item received was incorrect, damaged, or faulty.",
-      "We recommend using a tracked delivery service, as Serenity Wears cannot be held responsible for parcels lost while being returned to us.",
-    ],
-  },
-  {
-    title: "Refunds",
-    body: [
-      "Once your return has been received and inspected, we will notify you whether your return has been approved.",
-      "Approved refunds will be processed to the original payment method. Please allow additional processing time depending on your bank or payment provider.",
-    ],
-  },
-  {
-    title: "Faulty or Incorrect Item",
-    body: [
-      "If you receive an incorrect, damaged, or faulty item, please contact us as soon as possible with your order number and photographs of the item.",
-      "We will assess the issue and assist with a replacement, exchange, or refund where applicable.",
-    ],
-  },
-  {
-    title: "How to Start a Return",
-    body: [
-      "To request a return or exchange, please contact us at serenitywearsrsa@gmail.com with your order number, the item(s) you wish to return, the reason for the return, and photographs where applicable.",
-      "We'll provide you with the next steps.",
+      "We want you to be happy with your Serenity Wears purchase. Please contact us before sending any item back so that we can guide you through the process.",
+      "Change-of-mind and size exchanges: If you selected the wrong size or simply changed your mind, contact us within 7 calendar days after delivery. This is a voluntary exchange arrangement and does not limit any statutory cancellation or return right. Items must be unworn, unwashed and unused, with original tags attached and in their original condition and packaging. The item must not have stains, makeup, perfume, odours, damage or signs of wear. Exchanges are subject to stock availability.",
+      "For a voluntary size exchange where the customer selected the wrong size, the customer is responsible for the reasonable cost of returning the item and the delivery cost of the replacement item. We will confirm the return method and any costs before the customer proceeds. If the requested size is unavailable, we will discuss available alternatives.",
+      "Faulty, unsafe, damaged or incorrect items: Please notify us as soon as reasonably possible, preferably within 48 hours of delivery, and include your order number and clear photographs where relevant. The 48-hour request is to help us investigate delivery or packing issues; it does not reduce any rights you have under the Consumer Protection Act or other applicable law. Where the goods are defective or incorrectly supplied, we will arrange an appropriate remedy and bear costs where required by law.",
+      "Statutory rights: Under section 56 of the Consumer Protection Act 68 of 2008, qualifying defective goods may be returned within six months of delivery, at the supplier's risk and expense, and the consumer may choose the applicable statutory remedy of repair, replacement or refund. A cooling-off right under section 44 of the Electronic Communications and Transactions Act 25 of 2002 may also apply to qualifying transactions, including certain direct-marketing transactions. Where it applies, the law governs the cancellation period and direct return costs.",
+      "Sale items are subject to the same statutory consumer rights as other items. A sale label or store policy does not remove a customer's rights in respect of defective or incorrectly supplied goods.",
+      "Refunds will be processed in accordance with the applicable legal right or agreed resolution. Where a refund is due, we will communicate the process and expected timing. Refund timing may depend on the payment provider or bank.",
+      "To request a return or exchange, email serenitywearsrsa@gmail.com or WhatsApp 072 519 3126 with your order number, the item, the reason for the request and photographs where relevant. Please wait for our instructions before returning an item."
     ],
   },
   {
     title: "Delivery & Shipping",
     body: [
-      "Serenity Wears currently offers courier delivery within South Africa. We do not currently offer customer collection.",
-      "Any delivery fee and available delivery information will be shown to you before you confirm an order. Please review these details at checkout before making payment.",
-      "Orders are prepared for dispatch after payment has been successfully confirmed. Delivery estimates, where provided, are estimates and may be affected by courier operations, public holidays, weather, service interruptions or circumstances outside our control.",
-      "Please provide a complete and accurate delivery address, contact number and any access instructions when placing an order. Customers should make arrangements to receive the parcel at the supplied address.",
-      "If your parcel appears delayed, has not arrived within the communicated estimate, or arrives damaged, please contact serenitywearsrsa@gmail.com with your order number so that we can assist.",
-      "Delivery arrangements, fees and estimated timeframes must be confirmed on the website before an order is placed. Where no specific delivery period has been agreed, delivery will be handled in accordance with applicable South African consumer-protection law.",
+      "Serenity Wears offers delivery to residential and business addresses across South Africa through PAXI store-to-home courier delivery. The parcel is delivered to the address supplied by the customer; customers do not need to collect it from a PAXI point.",
+      "We do not offer collection from the Serenity Wears premises. Please provide a complete and accurate delivery address, recipient name, mobile number, suburb, city and postal code, together with any useful access instructions.",
+      "Current PAXI store-to-home delivery options: Standard bag (estimated 3–5 business days): R119.95. Large bag (estimated 3–5 business days): R149.95. The appropriate parcel size depends on the items and packaging. Delivery estimates are estimates and may be affected by courier operations, public holidays, weather or service interruptions.",
+      "Delivery is FREE on orders over R1,500. For orders of R1,500 or less, the applicable standard or large bag delivery charge will be added and shown before the order is confirmed. If the order contents require a different parcel size, we will contact the customer before dispatch if the delivery charge needs to change.",
+      "Orders are processed for dispatch after payment has been received and confirmed. Please ensure someone is available at the delivery address to receive the parcel. If delivery cannot be completed because the address or contact details supplied are incorrect or no recipient is available, additional delivery costs may apply where the courier charges them and where permitted by law.",
+      "If a parcel is delayed, appears lost, or arrives damaged, contact us at serenitywearsrsa@gmail.com or WhatsApp 072 519 3126 with your order number so that we can assist with the courier."
     ],
   },
   {
     title: "Privacy & Personal Information",
     body: [
-      "Serenity Wears respects your privacy and aims to handle personal information responsibly in accordance with the Protection of Personal Information Act 4 of 2013 (POPIA), where applicable.",
-      "When you enquire or place an order, we may collect information such as your name, email address, telephone number, delivery address, order details and communications with us. We use this information to respond to enquiries, process and deliver orders, provide customer support, manage returns and refunds, and meet applicable legal or record-keeping obligations.",
-      "We only intend to use personal information for the purposes for which it was collected or for another lawful and compatible purpose. We do not sell customers' personal information.",
-      "Information may be shared with service providers where reasonably necessary to operate the store and fulfil an order, such as courier companies, website hosting providers and payment service providers. These providers may process information on our behalf or independently under their own terms and privacy notices.",
-      "When online payments are enabled, payment details will be handled through the payment service provider's secure payment process. Serenity Wears does not intend to collect or store full payment card numbers or card security codes on this website.",
-      "We take reasonable steps to protect personal information against loss, unauthorised access, misuse or disclosure. Information is retained only for as long as reasonably necessary for the purposes described above or as required by law.",
-      "You may contact us to ask about personal information we hold about you, request correction of inaccurate information, or raise a privacy concern. Some information may need to be retained where the law requires it.",
-      "For privacy questions or requests, contact serenitywearsrsa@gmail.com.",
+      "Serenity Wears aims to handle personal information responsibly and in accordance with the Protection of Personal Information Act 4 of 2013 (POPIA).",
+      "When you place an order or contact us, we may collect your name, phone number, email address, delivery address, order details and communications with us. Customers can place an order without creating a website account.",
+      "We use this information to respond to enquiries, process and deliver orders, communicate about an order, provide customer support, handle returns and refunds, prevent fraud and meet applicable legal and record-keeping obligations. At present, we intend to use customer contact details for order-related communications and customer service, not unsolicited promotional messages.",
+      "We may share only the information reasonably needed with service providers involved in operating the website, processing payments or delivering orders, including courier and payment service providers. Those providers may also have their own privacy notices and terms.",
+      "We do not sell customers' personal information. We take reasonable steps to protect personal information against loss, unauthorised access, misuse or disclosure and retain it only for as long as reasonably necessary or as required by law.",
+      "You may contact us to ask about personal information we hold, request correction of inaccurate information or raise a privacy concern. Some records may need to be retained where the law requires it. For privacy requests, email serenitywearsrsa@gmail.com."
+    ],
+  },
+  {
+    title: "Appointments & In-Person Viewing",
+    body: [
+      "Customers in Gqeberha may request an appointment to view or try on selected clothing or to arrange an order collection by prior arrangement. Appointments must be booked in advance through WhatsApp on 072 519 3126.",
+      "An additional appointment fee applies. The fee will be discussed with the customer when the appointment is arranged and must be communicated before the booking is confirmed.",
+      "Serenity Wears operates from a private residential premises. For privacy and security, the exact address will only be shared after an appointment has been agreed and confirmed. Please do not arrive without an appointment.",
+      "Appointment availability, the items available to view and any collection arrangement must be confirmed with Serenity Wears in advance. This appointment arrangement does not create a general walk-in or parcel-collection service."
+    ],
+  },
+  {
+    title: "Payment Methods & Order Confirmation",
+    body: [
+      "All prices are displayed in South African rand (ZAR). Orders are only processed once the full payment due has been received and confirmed.",
+      "The payment methods currently available will be displayed or communicated by Serenity Wears before an order is confirmed. Do not send cash or payment to an account or number unless the payment instructions have been provided directly by Serenity Wears through its official contact channels.",
+      "The website checkout currently remains a demonstration and does not process live online payments. A payment gateway must be connected and tested before customers can pay by card or another online method through the website. Until that is done, customers should follow the payment instructions confirmed directly by Serenity Wears."
+    ],
+  },
+  {
+    title: "Terms & Conditions",
+    body: [
+      "By browsing the website or placing an order, you agree to use the website lawfully and to provide accurate and complete information when ordering.",
+      "All prices are in South African rand (ZAR). Prices, product descriptions, images, promotions and availability may be updated from time to time. A price or availability change will not retrospectively alter an order that Serenity Wears has already accepted and confirmed, except where correction is required by law or the customer agrees.",
+      "Products are subject to availability. If an item becomes unavailable after an order is placed, we will contact the customer and arrange an appropriate alternative or refund of amounts paid for the unavailable item.",
+      "An order is not ready for processing until payment has been received and confirmed. Customers are responsible for checking their selected products, sizes, quantities and delivery details before submitting an order.",
+      "Product colours and appearance may vary slightly depending on screen settings and photography. We aim to provide accurate descriptions and images, and this statement does not limit statutory rights where goods are materially misdescribed or defective.",
+      "Serenity Wears may update these website terms from time to time. The version published at the time an order is placed will generally apply to that order, subject always to applicable law.",
+      "Nothing in these policies is intended to exclude, restrict or waive any consumer right that cannot lawfully be excluded under South African law. If any term conflicts with a mandatory legal requirement, the legal requirement will prevail."
     ],
   },
   {
     title: "Customer Support & Business Information",
     body: [
-      "For order enquiries, product questions, delivery assistance, returns, exchanges or privacy requests, contact Serenity Wears at serenitywearsrsa@gmail.com.",
-      "Serenity Wears is based in Gqeberha, Eastern Cape, South Africa. Customer support is provided through the contact details published on this website.",
-    ],
-  },
-  {
-    title: "Website & Payment Notice",
-    body: [
-      "Product availability, prices, descriptions and images are displayed to help customers make an informed choice. Please check the product information and order summary before placing an order.",
-      "Online payment functionality is still being prepared. Until a secure payment option is visibly enabled and a payment confirmation is provided, this website should not be treated as accepting live online payments.",
+      "For product questions, order support, delivery enquiries, returns, exchanges, appointments or privacy requests, contact Serenity Wears using the details below.",
+      "WhatsApp: 072 519 3126. Email: serenitywearsrsa@gmail.com. Instagram: @serenitywearrsa. Business location: Gqeberha, Eastern Cape, South Africa.",
+      "Social media: Instagram @serenitywearrsa and TikTok @serenitywears. Please use the official contact details on this page for order-related support."
     ],
   },
 ];
+
+const sectionId = (title: string) =>
+  title.toLowerCase().replaceAll(" ", "-").replaceAll("&", "and");
 
 function Policies() {
   return (
@@ -118,25 +95,31 @@ function Policies() {
         <p className="text-xs font-bold uppercase tracking-[0.3em] text-[#8a4ba4]">Customer care</p>
         <h1 className="mt-3 font-serif text-5xl font-semibold tracking-[-0.04em] text-[#32133f]">Store Policies</h1>
         <p className="mt-5 max-w-2xl leading-7 text-[#6f6073]">
-          Please read these policies before placing an order. They explain how returns, delivery, personal information and customer support are handled at Serenity Wears.
+          Please read these policies before placing an order. They explain how delivery, returns, payments, appointments, personal information and customer support work at Serenity Wears.
         </p>
         <nav aria-label="Policy sections" className="mt-8 flex flex-wrap gap-2">
-          {["Returns & Exchange", "Delivery & Shipping", "Privacy & Personal Information", "Customer Support & Business Information"].map(title => (
-            <a key={title} href={"#"+title.toLowerCase().replaceAll(" ", "-").replaceAll("&", "and")} className="rounded-full border border-[#decfe5] bg-white px-4 py-2 text-xs font-semibold text-[#5b2475] hover:bg-[#f7eff9]">{title}</a>
+          {sections.map(section => (
+            <a key={section.title} href={"#" + sectionId(section.title)} className="rounded-full border border-[#decfe5] bg-white px-4 py-2 text-xs font-semibold text-[#5b2475] hover:bg-[#f7eff9]">{section.title}</a>
           ))}
         </nav>
         <div className="mt-10 space-y-5">
           {sections.map(section => (
-            <section key={section.title} id={section.title.toLowerCase().replaceAll(" ", "-").replaceAll("&", "and")} className="scroll-mt-8 bg-white p-7 shadow-sm ring-1 ring-[#eadff0] sm:p-9">
+            <section key={section.title} id={sectionId(section.title)} className="scroll-mt-8 bg-white p-7 shadow-sm ring-1 ring-[#eadff0] sm:p-9">
               <h2 className="font-serif text-2xl font-semibold tracking-[-0.02em] text-[#32133f]">{section.title}</h2>
               <div className="mt-4 space-y-3 text-sm leading-7 text-[#66586b]">
                 {section.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}
               </div>
+              {section.title === "Customer Support & Business Information" && (
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <a href="https://wa.me/27725193126" className="rounded-full bg-[#4c1d67] px-6 py-3 text-sm font-semibold text-white">WhatsApp Serenity Wears</a>
+                  <a href="mailto:serenitywearsrsa@gmail.com" className="rounded-full border border-[#4c1d67]/20 px-6 py-3 text-sm font-semibold text-[#4c1d67]">Email us</a>
+                </div>
+              )}
             </section>
           ))}
         </div>
         <p className="mt-10 text-xs leading-5 text-[#89798e]">
-          These policies are a working business draft and should be checked against Serenity Wears' actual delivery arrangements, data practices and applicable South African law before the store accepts live orders.
+          These policies are intended as practical business information and do not replace legal advice. They must be applied consistently with the Consumer Protection Act, the Electronic Communications and Transactions Act and POPIA.
         </p>
       </div>
     </main>
