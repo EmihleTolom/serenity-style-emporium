@@ -28,6 +28,19 @@ const demoProducts: Product[] = [
   { id: 6, name: "Auto Gele", category: "Accessories", price: 499, image: autoGele, description: "A statement accessory to complete your Serenity Wears look.", sizes: ["One Size"], soldOut: true },
 ];
 
+
+function normaliseImageUrls(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  } catch {
+    // A single public URL may be stored as plain text rather than a JSON array.
+  }
+  return value.startsWith("http") ? [value] : [];
+}
+
 const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 function Index() {
@@ -72,9 +85,7 @@ function Index() {
         name: item.name,
         category: item.category || "Dresses",
         price: Number(item.price),
-        image: Array.isArray(item.image_urls) && typeof item.image_urls[0] === "string" && item.image_urls[0].trim()
-          ? item.image_urls[0]
-          : adannaDress,
+        image: normaliseImageUrls(item.image_urls)[0] || adannaDress,
         description: item.description || "",
         sizes: item.sizes?.length ? item.sizes : ["One Size"],
         soldOut: Number(item.stock_quantity ?? 0) <= 0,
