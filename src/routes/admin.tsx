@@ -21,6 +21,18 @@ type ProductRow = {
 };
 
 
+function normaliseStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+  } catch {
+    // A plain comma-separated value is also supported.
+  }
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
 function normaliseImageUrls(value: unknown): string[] {
   if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
   if (typeof value !== "string" || !value.trim()) return [];
@@ -210,13 +222,13 @@ function AdminPage() {
       description: product.description ?? "",
       price: String(product.price),
       category: product.category ?? "Dresses",
-      sizes: (product.sizes ?? []).join(", "),
-      colours: (product.colours ?? []).join(", "),
+      sizes: normaliseStringArray(product.sizes).join(", "),
+      colours: normaliseStringArray(product.colours).join(", "),
       stock_quantity: String(product.stock_quantity ?? 0),
       is_published: product.is_published,
     });
     setExistingImages(normaliseImageUrls(product.image_urls));
-    setExistingVideos(product.video_urls ?? []);
+    setExistingVideos(normaliseStringArray(product.video_urls));
     setImages([]);
     setVideos([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -284,7 +296,7 @@ function AdminPage() {
           <button disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#4c1d67] px-5 py-3.5 text-sm font-semibold text-white disabled:opacity-60"><UploadCloud size={17}/>{busy ? "Saving product…" : editingId ? "Save changes" : "Save product"}</button>
         </form>
       </section>
-      <section><div className="flex items-center justify-between"><h2 className="font-serif text-2xl text-[#32133f]">Product listings</h2><button onClick={() => void loadProducts()} className="text-xs font-semibold text-[#6b2b83]">Refresh</button></div><div className="mt-4 space-y-3">{products.length === 0 ? <div className="rounded-xl border border-dashed border-[#d9c8e0] bg-white p-6 text-center text-sm text-[#77677c]">No products yet. Add your first product using the form.</div> : products.map((product) => <article key={product.id} className="flex gap-3 rounded-xl bg-white p-3 shadow-sm ring-1 ring-[#eadff0]"><img src={normaliseImageUrls(product.image_urls)[0] || "/placeholder.svg"} alt="" className="h-24 w-20 rounded-lg bg-[#f3e8f7] object-cover"/><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="truncate font-serif text-lg text-[#32133f]">{product.name}</h3><p className="text-xs text-[#77677c]">R{Number(product.price).toFixed(2)} · {product.category || "Uncategorised"}</p></div><span className={product.is_published ? "rounded-full bg-green-50 px-2 py-1 text-[10px] font-semibold text-green-700" : "rounded-full bg-[#f4ebf8] px-2 py-1 text-[10px] font-semibold text-[#6b2b83]"}>{product.is_published ? "Published" : "Draft"}</span></div><p className="mt-1 text-xs text-[#77677c]">Stock: {product.stock_quantity} · {(product.image_urls ?? []).length} photo(s)</p><div className="mt-3 flex gap-3 text-xs font-semibold text-[#6b2b83]"><button onClick={() => editProduct(product)}>Edit</button><button onClick={() => void removeProduct(product)} disabled={busy}>Delete</button></div></div></article>)}</div></section>
+      <section><div className="flex items-center justify-between"><h2 className="font-serif text-2xl text-[#32133f]">Product listings</h2><button onClick={() => void loadProducts()} className="text-xs font-semibold text-[#6b2b83]">Refresh</button></div><div className="mt-4 space-y-3">{products.length === 0 ? <div className="rounded-xl border border-dashed border-[#d9c8e0] bg-white p-6 text-center text-sm text-[#77677c]">No products yet. Add your first product using the form.</div> : products.map((product) => <article key={product.id} className="flex gap-3 rounded-xl bg-white p-3 shadow-sm ring-1 ring-[#eadff0]"><img src={normaliseImageUrls(product.image_urls)[0] || "/placeholder.svg"} alt="" className="h-24 w-20 rounded-lg bg-[#f3e8f7] object-cover"/><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="truncate font-serif text-lg text-[#32133f]">{product.name}</h3><p className="text-xs text-[#77677c]">R{Number(product.price).toFixed(2)} · {product.category || "Uncategorised"}</p></div><span className={product.is_published ? "rounded-full bg-green-50 px-2 py-1 text-[10px] font-semibold text-green-700" : "rounded-full bg-[#f4ebf8] px-2 py-1 text-[10px] font-semibold text-[#6b2b83]"}>{product.is_published ? "Published" : "Draft"}</span></div><p className="mt-1 text-xs text-[#77677c]">Stock: {product.stock_quantity} · {(product.image_urls ?? []).length} photo(s)</p><div className="mt-3 flex gap-3 text-xs font-semibold text-[#6b2b83]"><button type="button" onClick={() => editProduct(product)}>Edit</button><button type="button" onClick={() => void removeProduct(product)} disabled={busy}>Delete</button></div></div></article>)}</div></section>
     </div>
   </AdminShell>;
 }
