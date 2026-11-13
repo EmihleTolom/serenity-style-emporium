@@ -71,6 +71,7 @@ function AdminPage() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
   const [enhancingIndex, setEnhancingIndex] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
@@ -84,6 +85,38 @@ function AdminPage() {
       imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
     };
   }, [imagePreviews]);
+
+  const generateDescription = async () => {
+    if (!supabase) return;
+    if (!form.name.trim()) {
+      setMessage("Enter the product name first so the description can be tailored to the item.");
+      return;
+    }
+    setGeneratingDescription(true);
+    setMessage("");
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-description", {
+        body: {
+          name: form.name.trim(),
+          category: form.category,
+          sizes: form.sizes,
+          colours: form.colours,
+          price: form.price,
+          extraDetails: form.description.trim(),
+        },
+      });
+      if (error) throw error;
+      if (!data?.description || typeof data.description !== "string") {
+        throw new Error(data?.error || "The description service returned an empty response.");
+      }
+      setForm((current) => ({ ...current, description: data.description }));
+      setMessage("Description generated. Please review it and make any changes before saving.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not generate a description. Please try again.");
+    } finally {
+      setGeneratingDescription(false);
+    }
+  };
 
   const prepareProductImage = async (index: number) => {
     const sourceFile = images[index];
@@ -332,7 +365,7 @@ function AdminPage() {
         <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9565ad]">{editingId ? "Update listing" : "New listing"}</p><h2 className="mt-2 font-serif text-2xl text-[#32133f]">{editingId ? "Edit product" : "Add a product"}</h2></div>{editingId && <button onClick={resetForm} className="text-xs font-semibold text-[#6b2b83]">Cancel edit</button>}</div>
         <form onSubmit={saveProduct} className="mt-6 space-y-4">
           <Field label="Product name"><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={fieldClass}/></Field>
-          <Field label="Description"><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={fieldClass}/></Field>
+          <div><div className="mb-2 flex flex-wrap items-center justify-between gap-2"><label className="text-xs font-semibold text-[#5d4964]">Description</label><button type="button" onClick={() => void generateDescription()} disabled={generatingDescription || !form.name.trim()} className="rounded-full border border-[#cdb8d7] px-3 py-2 text-[11px] font-semibold text-[#5b2475] hover:bg-[#fcf8ff] disabled:cursor-not-allowed disabled:opacity-50">{generatingDescription ? "Generating…" : "✦ Generate Description"}</button></div><textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Write a description or generate one using AI…" className={fieldClass}/><p className="mt-1 text-[11px] leading-5 text-[#77677c]">AI-generated text is a draft. Check that it accurately describes the product before saving.</p></div>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Price (R) — current selling price"><input type="number" min="0" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={fieldClass}/></Field><Field label="Original price (R) — optional sale price"><input type="number" min="0" step="0.01" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} placeholder="Leave blank if not on sale" className={fieldClass}/></Field></div><Field label="Category"><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={fieldClass}><option>Dresses</option><option>Sets</option><option>Accessories</option><option>Handbags</option><option>Other</option></select></Field><p className="text-xs leading-5 text-[#77677c]">To put an item on sale, enter its reduced amount as the current selling price and its previous amount as the original price. The Sale badge will appear automatically.</p>
           <Field label="Sizes (separate with commas)"><input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} placeholder="XS, S, M, L, XL or One Size" className={fieldClass}/></Field>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Colours (separate with commas)"><input value={form.colours} onChange={(e) => setForm({ ...form, colours: e.target.value })} className={fieldClass}/></Field><Field label="Stock quantity"><input type="number" min="0" step="1" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className={fieldClass}/></Field></div>
