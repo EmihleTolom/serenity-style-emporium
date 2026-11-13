@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { LogOut, Plus, UploadCloud, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { ADMIN_USER_ID, PRODUCT_MEDIA_BUCKET, supabase } from "../lib/supabase";
@@ -45,6 +45,17 @@ function AdminPage() {
   const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+
+  const imagePreviews = useMemo(
+    () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [images],
+  );
+
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [imagePreviews]);
 
   const loadProducts = useCallback(async () => {
     if (!supabase) return;
@@ -254,7 +265,7 @@ function AdminPage() {
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Price (R)"><input type="number" min="0" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={fieldClass}/></Field><Field label="Category"><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={fieldClass}><option>Dresses</option><option>Sets</option><option>Accessories</option><option>Handbags</option><option>Other</option></select></Field></div>
           <Field label="Sizes (separate with commas)"><input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} placeholder="XS, S, M, L, XL or One Size" className={fieldClass}/></Field>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Colours (separate with commas)"><input value={form.colours} onChange={(e) => setForm({ ...form, colours: e.target.value })} className={fieldClass}/></Field><Field label="Stock quantity"><input type="number" min="0" step="1" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className={fieldClass}/></Field></div>
-          <div><label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)<input type="file" accept="image/*" multiple onChange={(e) => setImages(Array.from(e.target.files ?? []))} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{images.length > 0 && <p className="mt-2 text-xs text-[#77677c]">{images.length} new photo(s) selected</p>}{existingImages.length > 0 && <div className="mt-3 flex flex-wrap gap-2">{existingImages.map((url) => <div key={url} className="relative"><img src={url} alt="Product" className="h-16 w-14 rounded object-cover"/><button type="button" onClick={() => setExistingImages((items) => items.filter((item) => item !== url))} className="absolute -right-1 -top-1 rounded-full bg-white p-1 shadow"><X size={12}/></button></div>)}</div>}</div>
+          <div><label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)<input type="file" accept="image/*" multiple onChange={(e) => setImages((items) => [...items, ...Array.from(e.target.files ?? [])])} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{imagePreviews.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">New photos — check these before saving</p><div className="flex flex-wrap gap-3">{imagePreviews.map(({ file, url }, index) => <div key={url} className="w-20"><div className="relative"><img src={url} alt={file.name} className="h-24 w-20 rounded-lg border border-[#eadff0] object-cover"/><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setImages((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></div>)}</div></div>}{existingImages.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Saved photos</p><div className="flex flex-wrap gap-2">{existingImages.map((url) => <div key={url} className="relative"><img src={url} alt="Product" className="h-16 w-14 rounded object-cover"/><button type="button" onClick={() => setExistingImages((items) => items.filter((item) => item !== url))} className="absolute -right-1 -top-1 rounded-full bg-white p-1 shadow"><X size={12}/></button></div>)}</div></div>}</div>
           <div><label className="block text-xs font-semibold text-[#5d4964]">Product videos (optional)<input type="file" accept="video/*" multiple onChange={(e) => setVideos(Array.from(e.target.files ?? []))} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{videos.length > 0 && <p className="mt-2 text-xs text-[#77677c]">{videos.length} video(s) selected</p>}{existingVideos.length > 0 && <div className="mt-3 space-y-1">{existingVideos.map((url) => <div key={url} className="flex items-center justify-between gap-2 text-xs"><a href={url} target="_blank" rel="noreferrer" className="truncate text-[#6b2b83] underline">View existing video</a><button type="button" onClick={() => setExistingVideos((items) => items.filter((item) => item !== url))} className="text-[#6b2b83]">Remove</button></div>)}</div>}</div>
           <label className="flex items-center gap-3 rounded-lg bg-[#fcf8ff] p-3 text-sm text-[#4c1d67]"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} className="h-4 w-4 accent-[#5b2475]"/> Publish this product on the storefront</label>
           <button disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#4c1d67] px-5 py-3.5 text-sm font-semibold text-white disabled:opacity-60"><UploadCloud size={17}/>{busy ? "Saving product…" : editingId ? "Save changes" : "Save product"}</button>
