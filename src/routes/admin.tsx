@@ -11,6 +11,7 @@ type ProductRow = {
   name: string;
   description: string | null;
   price: number;
+  original_price?: number | null;
   category: string | null;
   sizes: string[];
   colours: string[];
@@ -49,6 +50,7 @@ const emptyForm = {
   name: "",
   description: "",
   price: "",
+  original_price: "",
   category: "Dresses",
   sizes: "XS, S, M, L, XL",
   colours: "",
@@ -183,6 +185,9 @@ function AdminPage() {
         name: form.name.trim(),
         description: form.description.trim(),
         price: Number(form.price),
+        original_price: form.original_price.trim() && Number(form.original_price) > Number(form.price)
+          ? Number(form.original_price)
+          : null,
         category: form.category.trim(),
         sizes: form.sizes.split(",").map((item) => item.trim()).filter(Boolean),
         colours: form.colours.split(",").map((item) => item.trim()).filter(Boolean),
@@ -224,6 +229,7 @@ function AdminPage() {
       name: product.name,
       description: product.description ?? "",
       price: String(product.price),
+      original_price: product.original_price == null ? "" : String(product.original_price),
       category: product.category ?? "Dresses",
       sizes: normaliseStringArray(product.sizes).join(", "),
       colours: normaliseStringArray(product.colours).join(", "),
@@ -290,7 +296,7 @@ function AdminPage() {
         <form onSubmit={saveProduct} className="mt-6 space-y-4">
           <Field label="Product name"><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={fieldClass}/></Field>
           <Field label="Description"><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={fieldClass}/></Field>
-          <div className="grid gap-4 sm:grid-cols-2"><Field label="Price (R)"><input type="number" min="0" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={fieldClass}/></Field><Field label="Category"><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={fieldClass}><option>Dresses</option><option>Sets</option><option>Accessories</option><option>Handbags</option><option>Other</option></select></Field></div>
+          <div className="grid gap-4 sm:grid-cols-2"><Field label="Price (R) — current selling price"><input type="number" min="0" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={fieldClass}/></Field><Field label="Original price (R) — optional sale price"><input type="number" min="0" step="0.01" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} placeholder="Leave blank if not on sale" className={fieldClass}/></Field></div><Field label="Category"><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={fieldClass}><option>Dresses</option><option>Sets</option><option>Accessories</option><option>Handbags</option><option>Other</option></select></Field><p className="text-xs leading-5 text-[#77677c]">To put an item on sale, enter its reduced amount as the current selling price and its previous amount as the original price. The Sale badge will appear automatically.</p>
           <Field label="Sizes (separate with commas)"><input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} placeholder="XS, S, M, L, XL or One Size" className={fieldClass}/></Field>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Colours (separate with commas)"><input value={form.colours} onChange={(e) => setForm({ ...form, colours: e.target.value })} className={fieldClass}/></Field><Field label="Stock quantity"><input type="number" min="0" step="1" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className={fieldClass}/></Field></div>
           <div><label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)<input type="file" accept="image/*" multiple onChange={(e) => setImages((items) => [...items, ...Array.from(e.target.files ?? [])])} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{imagePreviews.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">New photos — check these before saving</p><div className="flex flex-wrap gap-3">{imagePreviews.map(({ file, url }, index) => <div key={url} className="w-20"><div className="relative"><img src={url} alt={file.name} className="h-24 w-20 rounded-lg border border-[#eadff0] object-cover"/><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setImages((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></div>)}</div></div>}{existingImages.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Saved photos</p><div className="flex flex-wrap gap-2">{existingImages.map((url) => <div key={url} className="relative"><img src={url} alt="Product" className="h-16 w-14 rounded object-cover"/><button type="button" onClick={() => setExistingImages((items) => items.filter((item) => item !== url))} className="absolute -right-1 -top-1 rounded-full bg-white p-1 shadow"><X size={12}/></button></div>)}</div></div>}</div>
