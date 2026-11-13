@@ -71,6 +71,7 @@ function AdminPage() {
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [enhancingIndex, setEnhancingIndex] = useState<number | null>(null);
   const [message, setMessage] = useState("");
 
   const imagePreviews = useMemo(
@@ -83,6 +84,42 @@ function AdminPage() {
       imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
     };
   }, [imagePreviews]);
+
+  const prepareProductImage = async (index: number) => {
+    const sourceFile = images[index];
+    if (!sourceFile) return;
+    setEnhancingIndex(index);
+    setMessage("");
+    try {
+      const bitmap = await createImageBitmap(sourceFile);
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 1500;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Your browser could not prepare this image.");
+      context.fillStyle = "#fbf8fc";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      const scale = Math.min(1080 / bitmap.width, 1380 / bitmap.height);
+      const width = bitmap.width * scale;
+      const height = bitmap.height * scale;
+      context.filter = "brightness(1.04) contrast(1.04) saturate(1.04)";
+      context.drawImage(bitmap, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      bitmap.close();
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => result ? resolve(result) : reject(new Error("The edited image could not be created.")), "image/jpeg", 0.94);
+      });
+      const polishedFile = new File([blob], sourceFile.name.replace(/\\.[^.]+$/, "") + "-serenity.jpg", {
+        type: "image/jpeg",
+        lastModified: Date.now(),
+      });
+      setImages((current) => current.map((file, fileIndex) => fileIndex === index ? polishedFile : file));
+      setMessage("Photo enhanced and framed. Check the preview before saving the product.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not enhance this photo. Please try another image.");
+    } finally {
+      setEnhancingIndex(null);
+    }
+  };
 
   const loadProducts = useCallback(async () => {
     if (!supabase) return;
@@ -299,7 +336,7 @@ function AdminPage() {
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Price (R) — current selling price"><input type="number" min="0" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className={fieldClass}/></Field><Field label="Original price (R) — optional sale price"><input type="number" min="0" step="0.01" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} placeholder="Leave blank if not on sale" className={fieldClass}/></Field></div><Field label="Category"><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={fieldClass}><option>Dresses</option><option>Sets</option><option>Accessories</option><option>Handbags</option><option>Other</option></select></Field><p className="text-xs leading-5 text-[#77677c]">To put an item on sale, enter its reduced amount as the current selling price and its previous amount as the original price. The Sale badge will appear automatically.</p>
           <Field label="Sizes (separate with commas)"><input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} placeholder="XS, S, M, L, XL or One Size" className={fieldClass}/></Field>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Colours (separate with commas)"><input value={form.colours} onChange={(e) => setForm({ ...form, colours: e.target.value })} className={fieldClass}/></Field><Field label="Stock quantity"><input type="number" min="0" step="1" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className={fieldClass}/></Field></div>
-          <div><label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)<input type="file" accept="image/*" multiple onChange={(e) => setImages((items) => [...items, ...Array.from(e.target.files ?? [])])} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{imagePreviews.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">New photos — check these before saving</p><div className="flex flex-wrap gap-3">{imagePreviews.map(({ file, url }, index) => <div key={url} className="w-20"><div className="relative"><img src={url} alt={file.name} className="h-24 w-20 rounded-lg border border-[#eadff0] object-cover"/><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setImages((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></div>)}</div></div>}{existingImages.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Saved photos</p><div className="flex flex-wrap gap-2">{existingImages.map((url) => <div key={url} className="relative"><img src={url} alt="Product" className="h-16 w-14 rounded object-cover"/><button type="button" onClick={() => setExistingImages((items) => items.filter((item) => item !== url))} className="absolute -right-1 -top-1 rounded-full bg-white p-1 shadow"><X size={12}/></button></div>)}</div></div>}</div>
+          <div><label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)<input type="file" accept="image/*" multiple onChange={(e) => setImages((items) => [...items, ...Array.from(e.target.files ?? [])])} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{imagePreviews.length > 0 && <div className="mt-3"><p className="mb-1 text-xs font-semibold text-[#5d4964]">New photos — check these before saving</p><p className="mb-3 text-[11px] leading-5 text-[#77677c]">Use “Enhance & frame” to create a clean 4:5 product image with gentle lighting and colour adjustments. It keeps the entire garment visible rather than cutting off sleeves or hems.</p><div className="flex flex-wrap gap-4">{imagePreviews.map(({ file, url }, index) => <div key={url} className="w-28"><div className="relative"><img src={url} alt={file.name} className="h-36 w-28 rounded-lg border border-[#eadff0] bg-[#fbf8fc] object-contain"/><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setImages((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div><button type="button" disabled={enhancingIndex !== null} onClick={() => void prepareProductImage(index)} className="mt-2 w-full rounded-full border border-[#cdb8d7] px-2 py-2 text-[10px] font-semibold text-[#5b2475] disabled:opacity-50">{enhancingIndex === index ? "Preparing…" : "Enhance & frame"}</button><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></div>)}</div></div>}{existingImages.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Saved photos</p><div className="flex flex-wrap gap-2">{existingImages.map((url) => <div key={url} className="relative"><img src={url} alt="Product" className="h-16 w-14 rounded object-cover"/><button type="button" onClick={() => setExistingImages((items) => items.filter((item) => item !== url))} className="absolute -right-1 -top-1 rounded-full bg-white p-1 shadow"><X size={12}/></button></div>)}</div></div>}</div>
           <div><label className="block text-xs font-semibold text-[#5d4964]">Product videos (optional)<input type="file" accept="video/*" multiple onChange={(e) => setVideos(Array.from(e.target.files ?? []))} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{videos.length > 0 && <p className="mt-2 text-xs text-[#77677c]">{videos.length} video(s) selected</p>}{existingVideos.length > 0 && <div className="mt-3 space-y-1">{existingVideos.map((url) => <div key={url} className="flex items-center justify-between gap-2 text-xs"><a href={url} target="_blank" rel="noreferrer" className="truncate text-[#6b2b83] underline">View existing video</a><button type="button" onClick={() => setExistingVideos((items) => items.filter((item) => item !== url))} className="text-[#6b2b83]">Remove</button></div>)}</div>}</div>
           <label className="flex items-center gap-3 rounded-lg bg-[#fcf8ff] p-3 text-sm text-[#4c1d67]"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} className="h-4 w-4 accent-[#5b2475]"/> Publish this product on the storefront</label>
           <button disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#4c1d67] px-5 py-3.5 text-sm font-semibold text-white disabled:opacity-60"><UploadCloud size={17}/>{busy ? "Saving product…" : editingId ? "Save changes" : "Save product"}</button>
