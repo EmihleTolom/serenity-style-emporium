@@ -41,6 +41,27 @@ function normaliseImageUrls(value: unknown): string[] {
   return value.startsWith("http") ? [value] : [];
 }
 
+function normaliseSizes(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    const sizes = value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+    return sizes.length ? sizes : ["One Size"];
+  }
+  if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        const sizes = parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+        if (sizes.length) return sizes;
+      }
+    } catch {
+      // Admin-entered sizes may also be stored as a comma-separated string.
+    }
+    const sizes = value.split(",").map((item) => item.trim()).filter(Boolean);
+    if (sizes.length) return sizes;
+  }
+  return ["One Size"];
+}
+
 const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 function Index() {
@@ -87,7 +108,7 @@ function Index() {
         price: Number(item.price),
         image: normaliseImageUrls(item.image_urls)[0] || adannaDress,
         description: item.description || "",
-        sizes: item.sizes?.length ? item.sizes : ["One Size"],
+        sizes: normaliseSizes(item.sizes),
         soldOut: Number(item.stock_quantity ?? 0) <= 0,
       }));
       setProducts([...liveProducts, ...demoProducts]);
