@@ -189,7 +189,10 @@ function AdminPage() {
         stock_quantity: Math.max(0, Number.parseInt(form.stock_quantity || "0", 10)),
         image_urls: [...existingImages, ...newImages],
         video_urls: [...existingVideos, ...newVideos],
-        is_published: form.is_published,
+        // Editing a listing must never silently unpublish it.
+        is_published: editingId
+          ? (products.find((product) => product.id === editingId)?.is_published ?? form.is_published)
+          : form.is_published,
         updated_at: new Date().toISOString(),
       };
       const result = editingId
