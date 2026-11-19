@@ -139,6 +139,8 @@ function Index() {
   // "All" always starts from the complete product list; category filtering only
   // applies after a customer deliberately selects a specific category.
   const filtered = useMemo(() => products.filter((p) => {
+    // Keep the five original starter/demo garments off the storefront even if they reappear in a stale or restored product feed.
+    if (removedProductNames.has(p.name.trim().toLowerCase())) return false;
     const matchesCategory = category === "All" ||
       p.category.trim().toLowerCase() === category.trim().toLowerCase();
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
