@@ -10,55 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PoliciesRouteImport } from './routes/policies'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as PoliciesRouteImport } from './routes/policies'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PoliciesRoute = PoliciesRouteImport.update({
   id: '/policies',
   path: '/policies',
   getParentRoute: () => rootRouteImport,
 } as any)
 
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/policies': typeof PoliciesRoute
   '/admin': typeof AdminRoute
+  '/policies': typeof PoliciesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/policies': typeof PoliciesRoute
   '/admin': typeof AdminRoute
+  '/policies': typeof PoliciesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/policies': typeof PoliciesRoute
   '/admin': typeof AdminRoute
+  '/policies': typeof PoliciesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/policies' | '/admin'
+  fullPaths: '/' | '/admin' | '/policies'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/policies' | '/admin'
-  id: '__root__' | '/' | '/policies' | '/admin'
+  to: '/' | '/admin' | '/policies'
+  id: '__root__' | '/' | '/admin' | '/policies'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PoliciesRoute: typeof PoliciesRoute
   AdminRoute: typeof AdminRoute
+  PoliciesRoute: typeof PoliciesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -70,13 +68,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/policies': {
-      id: '/policies'
-      path: '/policies'
-      fullPath: '/policies'
-      preLoaderRoute: typeof PoliciesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -84,13 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/policies': {
+      id: '/policies'
+      path: '/policies'
+      fullPath: '/policies'
+      preLoaderRoute: typeof PoliciesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PoliciesRoute: PoliciesRoute,
   AdminRoute: AdminRoute,
+  PoliciesRoute: PoliciesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
