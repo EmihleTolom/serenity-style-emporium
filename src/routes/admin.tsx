@@ -6,7 +6,7 @@ import { ADMIN_USER_ID, PRODUCT_MEDIA_BUCKET, supabase } from "../lib/supabase";
 
 export const Route = createFileRoute("/admin")({ component: AdminPage });
 
-type BatchImage = { productId: string; productName: string; imageIndex: number; previewUrl: string; blob: Blob; fileName: string };
+type BatchImage = { productId: string; productName: string; imageIndex: number; previewUrl: string; blob: Blob; fileName: string; feedback?: string };
 
 type ProductRow = {
   id: string;
@@ -79,6 +79,7 @@ function AdminPage() {
   const [batchImages, setBatchImages] = useState<BatchImage[]>([]);
   const [batchBusy, setBatchBusy] = useState(false);
   const [batchProgress, setBatchProgress] = useState("");
+  const [rejectedImageIds, setRejectedImageIds] = useState<string[]>([]);
 
   const imagePreviews = useMemo(
     () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
@@ -260,40 +261,42 @@ function AdminPage() {
     }
   };
 
-  const approveBatchImages = async () => {
-    if (!supabase || !user || batchImages.length === 0 || batchBusy) return;
+  const approveSingleBatchImage = async (item: BatchImage) => {
+    if (!supabase || !user || batchBusy) return;
     setBatchBusy(true);
     setMessage("");
     try {
-      const replacements = new Map<string, Map<number, string>>();
-      for (const item of batchImages) {
-        const path = `${user.id}/images/standardised-${Date.now()}-${crypto.randomUUID()}-${item.fileName}`;
-        const { error: uploadError } = await supabase.storage.from(PRODUCT_MEDIA_BUCKET).upload(path, item.blob, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: "image/jpeg",
-        });
-        if (uploadError) throw uploadError;
-        const { data } = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(path);
-        const productMap = replacements.get(item.productId) ?? new Map<number, string>();
-        productMap.set(item.imageIndex, data.publicUrl);
-        replacements.set(item.productId, productMap);
-      }
-      for (const [productId, urlsByIndex] of replacements) {
-        const product = products.find((item) => item.id === productId);
-        if (!product) continue;
-        const nextUrls = normaliseImageUrls(product.image_urls).map((url, index) => urlsByIndex.get(index) ?? url);
-        const { error } = await supabase.from("products").update({ image_urls: nextUrls, updated_at: new Date().toISOString() }).eq("id", productId);
-        if (error) throw error;
-      }
-      setMessage(`Successfully standardised ${batchImages.length} product photo(s). Original files remain safely stored.`);
-      clearBatchPreviews();
+      const path = `${user.id}/images/standardised-${Date.now()}-${crypto.randomUUID()}-${item.fileName}`;
+      const { error: uploadError } = await supabase.storage.from(PRODUCT_MEDIA_BUCKET).upload(path, item.blob, {
+        cacheControl: "3600", upsert: false, contentType: "image/jpeg",
+      });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(path);
+      const product = products.find((entry) => entry.id === item.productId);
+      if (!product) throw new Error("This product could not be found. Refresh the product list and try again.");
+      const nextUrls = normaliseImageUrls(product.image_urls).map((url, index) => index === item.imageIndex ? data.publicUrl : url);
+      const { error } = await supabase.from("products").update({ image_urls: nextUrls, updated_at: new Date().toISOString() }).eq("id", item.productId);
+      if (error) throw error;
+      URL.revokeObjectURL(item.previewUrl);
+      setBatchImages((current) => current.filter((entry) => entry !== item));
+      setMessage(`Approved and applied the standardised photo for ${item.productName}. The original file remains in storage.`);
       await loadProducts();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "The batch could not be saved. Your original photos remain unchanged.");
+      setMessage(error instanceof Error ? error.message : "Could not apply this photo. The live product image was not changed.");
     } finally {
       setBatchBusy(false);
     }
+  };
+
+  const rejectSingleBatchImage = (item: BatchImage) => {
+    URL.revokeObjectURL(item.previewUrl);
+    setBatchImages((current) => current.filter((entry) => entry !== item));
+    setRejectedImageIds((current) => [...current, `${item.productId}-${item.imageIndex}`]);
+    setMessage(`Kept the original photo for ${item.productName}. It has not been changed on the website.`);
+  };
+
+  const updateBatchFeedback = (item: BatchImage, feedback: string) => {
+    setBatchImages((current) => current.map((entry) => entry === item ? { ...entry, feedback } : entry));
   };
 
   const resetForm = () => {
@@ -485,7 +488,7 @@ function AdminPage() {
           <p className="mt-2 text-xs leading-5 text-[#77677c]">Prepare every saved product photo as a consistent 4:5 image. The full photo is kept visible on a matching background; nothing is replaced until you review and approve the previews. Original uploads are retained.</p>
           <button type="button" onClick={() => void prepareAllProductImages()} disabled={batchBusy || products.length === 0} className="mt-4 w-full rounded-full bg-[#4c1d67] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{batchBusy ? "Preparing photos…" : "Prepare all product photos"}</button>
           {batchProgress && <p role="status" className="mt-3 text-xs text-[#5b2475]">{batchProgress}</p>}
-          {batchImages.length > 0 && <><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{batchImages.map((item) => <div key={item.previewUrl} className="min-w-0"><img src={item.previewUrl} alt={item.productName} className="aspect-[4/5] w-full rounded-lg border border-[#eadff0] bg-[#fbf8fc] object-contain"/><p className="mt-1 truncate text-[11px] font-semibold text-[#4c1d67]">{item.productName}</p><p className="text-[10px] text-[#77677c]">Photo {item.imageIndex + 1}</p></div>)}</div><div className="mt-4 flex flex-col gap-2"><button type="button" onClick={() => void approveBatchImages()} disabled={batchBusy} className="w-full rounded-full bg-[#4c1d67] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{batchBusy ? "Saving standardised photos…" : "Approve and apply all previews"}</button><button type="button" onClick={clearBatchPreviews} disabled={batchBusy} className="w-full rounded-full border border-[#d9c8e0] px-5 py-3 text-sm font-semibold text-[#5b2475] disabled:opacity-50">Discard previews</button></div></>}
+          {batchImages.length > 0 && <><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">{batchImages.map((item) => <div key={item.previewUrl} className="min-w-0 rounded-xl border border-[#eadff0] bg-[#fff] p-2"><img src={item.previewUrl} alt={item.productName} className="aspect-[4/5] w-full rounded-lg border border-[#eadff0] bg-[#fbf8fc] object-contain"/><p className="mt-2 truncate text-[11px] font-semibold text-[#4c1d67]">{item.productName}</p><p className="text-[10px] text-[#77677c]">Photo {item.imageIndex + 1}</p><textarea value={item.feedback || ""} onChange={(event) => updateBatchFeedback(item, event.target.value)} placeholder="What should change? (optional)" rows={2} className="mt-2 w-full rounded-lg border border-[#d9c8e0] p-2 text-xs"/><button type="button" onClick={() => void approveSingleBatchImage(item)} disabled={batchBusy} className="mt-2 w-full rounded-full bg-[#4c1d67] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Approve this photo</button><button type="button" onClick={() => rejectSingleBatchImage(item)} disabled={batchBusy} className="mt-2 w-full rounded-full border border-[#d9c8e0] px-3 py-2 text-xs font-semibold text-[#5b2475] disabled:opacity-50">Reject · keep original</button></div>)}</div><div className="mt-4 rounded-lg bg-[#f7f1fa] p-3 text-xs text-[#5b2475]">Approve or reject each photo individually. Rejected photos stay as they are on the live website. Any feedback you type here stays visible in this preview session so you can use it when requesting adjustments.</div><div className="mt-4"><button type="button" onClick={clearBatchPreviews} disabled={batchBusy} className="w-full rounded-full border border-[#d9c8e0] px-5 py-3 text-sm font-semibold text-[#5b2475] disabled:opacity-50">Discard all remaining previews</button></div></>}
         </div>
         <div className="mt-7 flex items-center justify-between"><h2 className="font-serif text-2xl text-[#32133f]">Product listings</h2><button onClick={() => void loadProducts()} className="text-xs font-semibold text-[#6b2b83]">Refresh</button></div><div className="mt-4 space-y-3">{products.length === 0 ? <div className="rounded-xl border border-dashed border-[#d9c8e0] bg-white p-6 text-center text-sm text-[#77677c]">No products yet. Add your first product using the form.</div> : products.map((product) => <article key={product.id} className="flex gap-3 rounded-xl bg-white p-3 shadow-sm ring-1 ring-[#eadff0]"><img src={normaliseImageUrls(product.image_urls)[0] || "/placeholder.svg"} alt="" className="h-24 w-20 rounded-lg bg-[#f3e8f7] object-cover"/><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><h3 className="truncate font-serif text-lg text-[#32133f]">{product.name}</h3><p className="text-xs text-[#77677c]">R{Number(product.price).toFixed(2)} · {product.category || "Uncategorised"}</p></div><span className={product.is_published ? "rounded-full bg-green-50 px-2 py-1 text-[10px] font-semibold text-green-700" : "rounded-full bg-[#f4ebf8] px-2 py-1 text-[10px] font-semibold text-[#6b2b83]"}>{product.is_published ? "Published" : "Draft"}</span></div><p className="mt-1 text-xs text-[#77677c]">Stock: {product.stock_quantity} · {(product.image_urls ?? []).length} photo(s)</p><div className="mt-3 flex gap-3 text-xs font-semibold text-[#6b2b83]"><button type="button" onClick={() => editProduct(product)}>Edit</button><button type="button" onClick={() => void removeProduct(product)} disabled={busy}>Delete</button></div></div></article>)}</div></section>
     </div>
