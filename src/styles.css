@@ -117,3 +117,32 @@
     font-family: var(--font-sans);
   }
 }
+
+/* Keep every product photo in the storefront catalogue in an identical frame,
+   regardless of the source image's original dimensions or crop. */
+.product-image-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  height: auto;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.product-image-button {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+
+.product-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
