@@ -79,7 +79,7 @@ function AdminPage() {
   const [batchImages, setBatchImages] = useState<BatchImage[]>([]);
   const [batchBusy, setBatchBusy] = useState(false);
   const [batchProgress, setBatchProgress] = useState("");
-  const [selectedApplyIds, setSelectedRejectIds] = useState<string[]>([]);
+  const [selectedApplyIds, setSelectedApplyIds] = useState<string[]>([]);
 
   const imagePreviews = useMemo(
     () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
@@ -202,7 +202,7 @@ function AdminPage() {
   const clearBatchPreviews = () => {
     batchImages.forEach((item) => URL.revokeObjectURL(item.previewUrl));
     setBatchImages([]);
-    setSelectedRejectIds([]);
+    setSelectedApplyIds([]);
     setBatchProgress("");
   };
 
@@ -252,7 +252,7 @@ function AdminPage() {
         });
       }
       setBatchImages(prepared);
-      setSelectedRejectIds([]);
+      setSelectedApplyIds([]);
       setBatchProgress(`Ready to review ${prepared.length} standardised photo(s) across ${new Set(prepared.map((item) => item.productId)).size} product(s).`);
     } catch (error) {
       prepared.forEach((item) => URL.revokeObjectURL(item.previewUrl));
@@ -281,7 +281,7 @@ function AdminPage() {
       if (error) throw error;
       URL.revokeObjectURL(item.previewUrl);
       setBatchImages((current) => current.filter((entry) => entry !== item));
-      setSelectedRejectIds((current) => current.filter((id) => id !== `${item.productId}-${item.imageIndex}`));
+      setSelectedApplyIds((current) => current.filter((id) => id !== `${item.productId}-${item.imageIndex}`));
       setMessage(`Approved and applied the standardised photo for ${item.productName}. The original file remains in storage.`);
       await loadProducts();
     } catch (error) {
@@ -294,25 +294,54 @@ function AdminPage() {
   const rejectSingleBatchImage = (item: BatchImage) => {
     URL.revokeObjectURL(item.previewUrl);
     setBatchImages((current) => current.filter((entry) => entry !== item));
-    setSelectedRejectIds((current) => current.filter((id) => id !== `${item.productId}-${item.imageIndex}`));
+    setSelectedApplyIds((current) => current.filter((id) => id !== `${item.productId}-${item.imageIndex}`));
     setMessage(`Kept the original photo for ${item.productName}. It has not been changed on the website.`);
   };
 
   const toggleApplySelection = (item: BatchImage, checked: boolean) => {
     const id = `${item.productId}-${item.imageIndex}`;
-    setSelectedRejectIds((current) => checked
+    setSelectedApplyIds((current) => checked
       ? (current.includes(id) ? current : [...current, id])
       : current.filter((entry) => entry !== id));
   };
 
-  const applySelectedBatchImages = () => {
+  const applySelectedBatchImages = async () => {
+    if (!supabase || !user || batchBusy) return;
     const selected = new Set(selectedApplyIds);
-    const rejected = batchImages.filter((item) => selected.has(`${item.productId}-${item.imageIndex}`));
-    if (rejected.length === 0) return;
-    rejected.forEach((item) => URL.revokeObjectURL(item.previewUrl));
-    setBatchImages((current) => current.filter((item) => !selected.has(`${item.productId}-${item.imageIndex}`)));
-    setSelectedRejectIds([]);
-    setMessage(`Kept the original photos for ${rejected.length} selected image(s). None of those live website photos were changed.`);
+    const chosen = batchImages.filter((item) => selected.has(`${item.productId}-${item.imageIndex}`));
+    if (chosen.length === 0) return;
+    setBatchBusy(true);
+    setMessage("");
+    let applied = 0;
+    try {
+      for (const item of chosen) {
+        const path = `${user.id}/images/standardised-${Date.now()}-${crypto.randomUUID()}-${item.fileName}`;
+        const { error: uploadError } = await supabase.storage.from(PRODUCT_MEDIA_BUCKET).upload(path, item.blob, {
+          cacheControl: "3600", upsert: false, contentType: "image/jpeg",
+        });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(path);
+        const { data: currentProduct, error: readError } = await supabase.from("products").select("image_urls").eq("id", item.productId).single();
+        if (readError || !currentProduct) throw readError || new Error(`Could not find ${item.productName}.`);
+        const currentUrls = normaliseImageUrls(currentProduct.image_urls);
+        const nextUrls = currentUrls.map((url, index) => index === item.imageIndex ? data.publicUrl : url);
+        const { error } = await supabase.from("products").update({ image_urls: nextUrls, updated_at: new Date().toISOString() }).eq("id", item.productId);
+        if (error) throw error;
+        applied += 1;
+        URL.revokeObjectURL(item.previewUrl);
+        setBatchImages((current) => current.filter((entry) => entry !== item));
+      }
+      setSelectedApplyIds([]);
+      setMessage(`Applied the matching 1200 × 1500 format to ${applied} selected photo(s). Original uploads remain in storage.`);
+      await loadProducts();
+    } catch (error) {
+      setMessage(error instanceof Error
+        ? `${error.message} ${applied} selected photo(s) were already applied; the remaining photos were not changed.`
+        : `${applied} selected photo(s) were applied. The remaining photos were not changed.`);
+      await loadProducts();
+    } finally {
+      setBatchBusy(false);
+    }
   };
 
   const updateBatchFeedback = (item: BatchImage, feedback: string) => {
