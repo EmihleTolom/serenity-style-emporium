@@ -233,8 +233,9 @@ function AdminPage() {
         }
         context.fillStyle = "#fbf8fc";
         context.fillRect(0, 0, canvas.width, canvas.height);
-        const padding = 60;
-        const scale = Math.min((canvas.width - padding * 2) / bitmap.width, (canvas.height - padding * 2) / bitmap.height);
+        // Fill the complete 4:5 canvas edge-to-edge. This intentionally crops
+        // excess outer background instead of shrinking the whole photo and leaving margins.
+        const scale = Math.max(canvas.width / bitmap.width, canvas.height / bitmap.height);
         const width = bitmap.width * scale;
         const height = bitmap.height * scale;
         context.drawImage(bitmap, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
