@@ -105,7 +105,7 @@ function Index() {
         oldPrice: item.original_price == null ? undefined : Number(item.original_price),
         createdAt: item.created_at || undefined,
         badge: item.original_price != null && Number(item.original_price) > Number(item.price)
-          ? "Sale"
+          ? `${Math.round(((Number(item.original_price) - Number(item.price)) / Number(item.original_price)) * 100)}% OFF`
           : item.created_at && Date.now() - new Date(item.created_at).getTime() < 14 * 24 * 60 * 60 * 1000
             ? "New"
             : undefined,
@@ -195,7 +195,7 @@ function Index() {
 
   return (
     <main className="min-h-screen bg-[#fcf8ff] text-[#261b2d]">
-      <div className="bg-[#4c1d67] px-4 py-2 text-center text-[11px] font-medium tracking-[0.16em] text-white">FREE DELIVERY ON ORDERS OVER R1,500 · YOUR BEAUTY, OUR PEACE</div>
+      <div className="bg-[#4c1d67] px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white sm:text-xs"><span className="block">Black Friday, Extended Through December</span><span className="mt-1 block font-normal tracking-[0.1em]">Enjoy R100 off most styles · Free delivery on orders over R1,500</span></div>
 
       <header className="sticky top-0 z-50 border-b border-[#eadff0] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
