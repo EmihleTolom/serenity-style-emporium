@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { LogOut, Plus, UploadCloud, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
-import { ADMIN_USER_ID, PRODUCT_MEDIA_BUCKET, supabase } from "../lib/supabase";
+import { ABOUT_IMAGE_CONFIG_PATH, ADMIN_USER_ID, PRODUCT_MEDIA_BUCKET, supabase } from "../lib/supabase";
 
 export const Route = createFileRoute("/admin")({ component: AdminPage });
 
@@ -80,6 +80,9 @@ function AdminPage() {
   const [batchBusy, setBatchBusy] = useState(false);
   const [batchProgress, setBatchProgress] = useState("");
   const [selectedApplyIds, setSelectedApplyIds] = useState<string[]>([]);
+  const [aboutImage, setAboutImage] = useState<File | null>(null);
+  const [currentAboutImageUrl, setCurrentAboutImageUrl] = useState("");
+  const [aboutImageBusy, setAboutImageBusy] = useState(false);
 
   const imagePreviews = useMemo(
     () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
@@ -198,6 +201,44 @@ function AdminPage() {
   useEffect(() => {
     if (user?.id === ADMIN_USER_ID) void loadProducts();
   }, [user, loadProducts]);
+
+
+  useEffect(() => {
+    if (!supabase || user?.id !== ADMIN_USER_ID) return;
+    const configUrl = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(ABOUT_IMAGE_CONFIG_PATH).data.publicUrl;
+    fetch(configUrl + "?t=" + Date.now())
+      .then((response) => response.ok ? response.json() : null)
+      .then((config) => { if (typeof config?.imageUrl === "string") setCurrentAboutImageUrl(config.imageUrl); })
+      .catch(() => undefined);
+  }, [user]);
+
+  const saveAboutImage = async () => {
+    if (!supabase || !user || !aboutImage || aboutImageBusy) return;
+    setAboutImageBusy(true);
+    setMessage("");
+    try {
+      if (!aboutImage.type.startsWith("image/")) throw new Error("Please choose an image file.");
+      const safeName = aboutImage.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+      const imagePath = `${user.id}/about/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+      const { error: imageError } = await supabase.storage.from(PRODUCT_MEDIA_BUCKET).upload(imagePath, aboutImage, {
+        cacheControl: "3600", upsert: false, contentType: aboutImage.type,
+      });
+      if (imageError) throw imageError;
+      const imageUrl = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(imagePath).data.publicUrl;
+      const config = new Blob([JSON.stringify({ imageUrl, updatedAt: new Date().toISOString() })], { type: "application/json" });
+      const { error: configError } = await supabase.storage.from(PRODUCT_MEDIA_BUCKET).upload(ABOUT_IMAGE_CONFIG_PATH, config, {
+        cacheControl: "0", upsert: true, contentType: "application/json",
+      });
+      if (configError) throw configError;
+      setCurrentAboutImageUrl(imageUrl);
+      setAboutImage(null);
+      setMessage("About section image updated. The storefront will display the new photo.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "The About image could not be saved.");
+    } finally {
+      setAboutImageBusy(false);
+    }
+  };
 
   const clearBatchPreviews = () => {
     batchImages.forEach((item) => URL.revokeObjectURL(item.previewUrl));
@@ -516,6 +557,13 @@ function AdminPage() {
       <button onClick={signOut} className="inline-flex items-center gap-2 rounded-full border border-[#d9c8e0] bg-white px-4 py-2.5 text-sm font-semibold text-[#4c1d67]"><LogOut size={16}/> Sign out</button>
     </div>
     {message && <p role="status" className="mt-5 rounded-lg bg-white p-3 text-sm text-[#5b2475] ring-1 ring-[#eadff0]">{message}</p>}
+    <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#eadff0] sm:p-8">
+      <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9565ad]">Storefront content</p><h2 className="mt-2 font-serif text-2xl text-[#32133f]">About section image</h2><p className="mt-2 text-sm leading-6 text-[#77677c]">Upload or replace the photograph displayed beside the About Serenity Wears text on your website.</p></div>
+      {currentAboutImageUrl && <div className="mt-5 max-w-sm"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Currently displayed</p><img src={currentAboutImageUrl} alt="Current About section" className="aspect-[4/5] w-full rounded-xl border border-[#eadff0] bg-[#fcf8ff] object-cover"/></div>}
+      <div className="mt-5"><label className="block text-xs font-semibold text-[#5d4964]">Choose a new About image<input type="file" accept="image/*" onChange={(event) => setAboutImage(event.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label></div>
+      {aboutImage && <p className="mt-2 text-xs text-[#77677c]">Selected: {aboutImage.name}</p>}
+      <button type="button" onClick={() => void saveAboutImage()} disabled={!aboutImage || aboutImageBusy} className="mt-4 rounded-full bg-[#4c1d67] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{aboutImageBusy ? "Uploading image…" : currentAboutImageUrl ? "Replace About image" : "Upload About image"}</button>
+    </section>
     <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,.9fr)]">
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#eadff0] sm:p-8">
         <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9565ad]">{editingId ? "Update listing" : "New listing"}</p><h2 className="mt-2 font-serif text-2xl text-[#32133f]">{editingId ? "Edit product" : "Add a product"}</h2></div>{editingId && <button onClick={resetForm} className="text-xs font-semibold text-[#6b2b83]">Cancel edit</button>}</div>
