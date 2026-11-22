@@ -10,3 +10,4 @@ export const supabase =
 
 export const ADMIN_USER_ID = "250bdd6e-f7c8-4053-9397-63223b982180";
 export const PRODUCT_MEDIA_BUCKET = "product-media";
+export const ABOUT_IMAGE_CONFIG_PATH = `${ADMIN_USER_ID}/settings/about-image.json`;
