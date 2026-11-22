@@ -557,13 +557,6 @@ function AdminPage() {
       <button onClick={signOut} className="inline-flex items-center gap-2 rounded-full border border-[#d9c8e0] bg-white px-4 py-2.5 text-sm font-semibold text-[#4c1d67]"><LogOut size={16}/> Sign out</button>
     </div>
     {message && <p role="status" className="mt-5 rounded-lg bg-white p-3 text-sm text-[#5b2475] ring-1 ring-[#eadff0]">{message}</p>}
-    <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#eadff0] sm:p-8">
-      <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9565ad]">Storefront content</p><h2 className="mt-2 font-serif text-2xl text-[#32133f]">About section image</h2><p className="mt-2 text-sm leading-6 text-[#77677c]">Upload or replace the photograph displayed beside the About Serenity Wears text on your website.</p></div>
-      {currentAboutImageUrl && <div className="mt-5 max-w-sm"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Currently displayed</p><img src={currentAboutImageUrl} alt="Current About section" className="aspect-[4/5] w-full rounded-xl border border-[#eadff0] bg-[#fcf8ff] object-cover"/></div>}
-      <div className="mt-5"><label className="block text-xs font-semibold text-[#5d4964]">Choose a new About image<input type="file" accept="image/*" onChange={(event) => setAboutImage(event.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label></div>
-      {aboutImage && <p className="mt-2 text-xs text-[#77677c]">Selected: {aboutImage.name}</p>}
-      <button type="button" onClick={() => void saveAboutImage()} disabled={!aboutImage || aboutImageBusy} className="mt-4 rounded-full bg-[#4c1d67] px-6 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{aboutImageBusy ? "Uploading image…" : currentAboutImageUrl ? "Replace About image" : "Upload About image"}</button>
-    </section>
     <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,.9fr)]">
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#eadff0] sm:p-8">
         <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9565ad]">{editingId ? "Update listing" : "New listing"}</p><h2 className="mt-2 font-serif text-2xl text-[#32133f]">{editingId ? "Edit product" : "Add a product"}</h2></div>{editingId && <button onClick={resetForm} className="text-xs font-semibold text-[#6b2b83]">Cancel edit</button>}</div>
