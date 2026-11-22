@@ -472,10 +472,19 @@ function AdminPage() {
         updated_at: new Date().toISOString(),
       };
       const result = editingId
-        ? await supabase.from("products").update(payload).eq("id", editingId)
-        : await supabase.from("products").insert(payload);
+        ? await supabase.from("products").update(payload).eq("id", editingId).select("id, price, original_price").maybeSingle()
+        : await supabase.from("products").insert(payload).select("id, price, original_price").single();
       if (result.error) throw result.error;
-      setMessage(form.is_published ? "Product saved and published." : "Product saved as a draft.");
+      if (!result.data) {
+        throw new Error("No changes were saved. The database did not update this product. This is usually caused by a database permission (Row Level Security) rule. Please check the products table update policy in Supabase.");
+      }
+      if (
+        Number(result.data.price) !== Number(payload.price) ||
+        (result.data.original_price == null ? null : Number(result.data.original_price)) !== payload.original_price
+      ) {
+        throw new Error("The product was found, but the saved prices do not match the values entered. Please try again.");
+      }
+      setMessage(editingId ? "Changes saved successfully, including both prices." : (form.is_published ? "Product saved and published." : "Product saved as a draft."));
       resetForm();
       await loadProducts();
     } catch (error) {
