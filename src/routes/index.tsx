@@ -1,7 +1,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { ABOUT_IMAGE_CONFIG_PATH, PRODUCT_MEDIA_BUCKET, supabase } from "../lib/supabase";
 import { ChevronLeft, ChevronRight, Heart, Instagram, Menu, Minus, Plus, Search, ShoppingBag, Trash2, X } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: Index });
@@ -54,6 +54,7 @@ const money = (value: number) => new Intl.NumberFormat("en-ZA", { style: "curren
 function Index() {
   const [products, setProducts] = useState<Product[]>([]);
   const [productLoadError, setProductLoadError] = useState("");
+  const [aboutImageUrl, setAboutImageUrl] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
 
@@ -64,6 +65,15 @@ function Index() {
     }, 5000);
     return () => window.clearInterval(timer);
   }, [products.length]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    const configUrl = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(ABOUT_IMAGE_CONFIG_PATH).data.publicUrl;
+    fetch(configUrl + "?t=" + Date.now())
+      .then((response) => response.ok ? response.json() : null)
+      .then((config) => { if (typeof config?.imageUrl === "string") setAboutImageUrl(config.imageUrl); })
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -246,7 +256,7 @@ function Index() {
 
       {collectionCards.length > 0 && <section id="collections" className="scroll-mt-20 bg-[#f7eff9]"><div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-28"><div className="text-center"><p className="text-xs font-bold uppercase tracking-[0.3em] text-[#8a4ba4]">Shop by mood</p><h2 className="mt-3 font-serif text-4xl text-[#32133f] sm:text-5xl">Collections</h2></div><div className="mt-12 grid gap-5 sm:grid-cols-3">{collectionCards.map(([title, image, description]) => <a key={title} href="#shop" className="group relative aspect-[4/5] overflow-hidden bg-[#e9ddef]"><img src={image} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-105"/><div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#25122d]/85 to-transparent p-7 pt-24 text-white"><p className="text-[10px] uppercase tracking-[0.25em] text-[#e6c7ee]">Serenity Wears</p><h3 className="mt-2 font-serif text-3xl">{title}</h3><p className="mt-1 text-sm text-white/75">{description}</p></div></a>)}</div></div></section>}
 
-      <section id="about" className="scroll-mt-20 bg-[#3b174d] text-white"><div className="mx-auto grid max-w-7xl lg:grid-cols-2"><div className="min-h-[520px] bg-gradient-to-br from-[#6b3b79] via-[#4c1d67] to-[#25122d]"/><div className="flex flex-col justify-center px-6 py-20 sm:px-10 lg:px-16"><p className="text-xs font-bold uppercase tracking-[0.3em] text-[#dcb9e7]">About Serenity Wears</p><h2 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">Where style meets serenity.</h2><p className="mt-7 leading-8 text-white/75">Serenity Wears celebrates feminine fashion, African-inspired detail and the confidence that comes from finding a piece that feels like it was made for you.</p><p className="mt-4 leading-8 text-white/75">Our online store makes that experience easier: discover your next look, choose your size, add it to your bag and complete your order in one place.</p><a href="#shop" className="mt-8 w-fit rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#4c1d67]">Shop the edit</a></div></div></section>
+      <section id="about" className="scroll-mt-20 bg-[#3b174d] text-white"><div className="mx-auto grid max-w-7xl lg:grid-cols-2"><div className="relative min-h-[520px] overflow-hidden bg-gradient-to-br from-[#6b3b79] via-[#4c1d67] to-[#25122d]">{aboutImageUrl && <img src={aboutImageUrl} alt="Serenity Wears fashion" className="absolute inset-0 h-full w-full object-cover"/>}</div><div className="flex flex-col justify-center px-6 py-20 sm:px-10 lg:px-16"><p className="text-xs font-bold uppercase tracking-[0.3em] text-[#dcb9e7]">About Serenity Wears</p><h2 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">Where style meets serenity.</h2><p className="mt-7 leading-8 text-white/75">Serenity Wears celebrates feminine fashion, African-inspired detail and the confidence that comes from finding a piece that feels like it was made for you.</p><p className="mt-4 leading-8 text-white/75">Our online store makes that experience easier: discover your next look, choose your size, add it to your bag and complete your order in one place.</p><a href="#shop" className="mt-8 w-fit rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-[#4c1d67]">Shop the edit</a></div></div></section>
 
       <section id="contact" className="scroll-mt-20 bg-white"><div className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:py-24"><div className="grid gap-10 lg:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[0.3em] text-[#8a4ba4]">Need help?</p><h2 className="mt-3 font-serif text-4xl text-[#32133f] sm:text-5xl">We are here for you.</h2><p className="mt-5 max-w-lg leading-7 text-[#6f6073]">WhatsApp and social media remain available for sizing questions, product queries, appointments and general customer support. You can also email us at serenitywearsrsa@gmail.com or WhatsApp 072 519 3126. Your shopping journey, however, starts and ends here on the website.</p><div className="mt-7 flex flex-wrap gap-3"><a href="https://wa.me/27725193126" className="rounded-full bg-[#4c1d67] px-6 py-3 text-sm font-semibold text-white">WhatsApp us</a><a href="https://www.instagram.com/serenitywearrsa?stkn=MXh6YW9tdWdldHB6Zw==" target="_blank" rel="noreferrer" className="rounded-full border border-[#4c1d67]/20 px-6 py-3 text-sm font-semibold text-[#4c1d67]">Instagram</a></div></div><div className="grid gap-3 sm:grid-cols-2">{[
         ["WhatsApp","072 519 3126 · Queries & customer support","https://wa.me/27725193126"],["Instagram","@serenitywearrsa","https://www.instagram.com/serenitywearrsa?stkn=MXh6YW9tdWdldHB6Zw=="],["Facebook","Serenity Wears","https://www.facebook.com/share/19KNienkZR/?mibextid=wwXIfr"],["TikTok","@serenitywearrsa","https://www.tiktok.com/@serenitywears?_r=1&_t=ZS-9AELnyrKRmA"],["Email","serenitywearsrsa@gmail.com","mailto:serenitywearsrsa@gmail.com"]
