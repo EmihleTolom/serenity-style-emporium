@@ -195,7 +195,7 @@ function Index() {
 
   return (
     <main className="min-h-screen bg-[#fcf8ff] text-[#261b2d]">
-      <div className="bg-[#4c1d67] px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white sm:text-xs"><span className="block">Black Friday, Extended Through December</span><span className="mt-1 block font-normal tracking-[0.1em]">Enjoy R100 off most styles · Free delivery on orders over R1,500</span></div>
+      <div className="bg-[#4c1d67] px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white sm:text-xs"><span className="block">Black Friday Extended Through December</span><span className="mt-1 block font-normal tracking-[0.1em]">Enjoy exclusive discounts on selected styles. Shop the sale and discover your savings!</span><span className="mt-1 block text-[9px] font-normal tracking-[0.08em] sm:text-[10px]">Free delivery on orders over R1,500</span></div>
 
       <header className="sticky top-0 z-50 border-b border-[#eadff0] bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
