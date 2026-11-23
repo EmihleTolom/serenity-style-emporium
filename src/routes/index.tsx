@@ -28,6 +28,18 @@ function normaliseImageUrls(value: unknown): string[] {
   return value.startsWith("http") ? [value] : [];
 }
 
+function normaliseColours(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
+  } catch {
+    // Support comma-separated colour names if the database returns plain text.
+  }
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
 function normaliseSizes(value: unknown): string[] {
   if (Array.isArray(value)) {
     const sizes = value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
@@ -113,7 +125,7 @@ function Index() {
         images: normaliseImageUrls(item.image_urls).length ? normaliseImageUrls(item.image_urls) : ["/placeholder.svg"],
         videos: normaliseImageUrls(item.video_urls),
         description: item.description || "",        sizes: normaliseSizes(item.sizes),
-        colours: Array.isArray(item.colours) ? item.colours.filter((colour: unknown): colour is string => typeof colour === "string" && colour.trim().length > 0) : [],
+        colours: normaliseColours(item.colours),
         soldOut: Number(item.stock_quantity ?? 0) <= 0,
       }));
       setProducts(liveProducts);
