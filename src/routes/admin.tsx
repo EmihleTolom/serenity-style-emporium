@@ -421,10 +421,16 @@ function AdminPage() {
     setPhotoOrder((current) => [...current, ...ids]);
   };
 
-  const setAsCoverPhoto = (key: string) => {
-    if (coverImageKey && coverImageKey !== key) {
-      setPhotoOrder((current) => current.includes(coverImageKey) ? current : [...current, coverImageKey]);
+  const returnCoverToProductPhotos = (key: string) => {
+    if (key.startsWith("existing:")) {
+      const url = key.slice("existing:".length);
+      setExistingImages((current) => current.includes(url) ? current : [...current, url]);
     }
+    setPhotoOrder((current) => current.includes(key) ? current : [...current, key]);
+  };
+
+  const setAsCoverPhoto = (key: string) => {
+    if (coverImageKey && coverImageKey !== key) returnCoverToProductPhotos(coverImageKey);
     setPhotoOrder((current) => current.filter((item) => item !== key));
     setColourPhotoAssignments((current) => Object.fromEntries(Object.entries(current).filter(([, value]) => value !== key)));
     setCoverImageKey(key);
@@ -433,6 +439,7 @@ function AdminPage() {
 
   const removePhoto = (key: string) => {
     if (key === coverImageKey) {
+      returnCoverToProductPhotos(key);
       setCoverImageKey(null);
       setExistingCoverImageUrl("");
       return;
