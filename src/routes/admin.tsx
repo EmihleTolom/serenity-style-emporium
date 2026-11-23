@@ -48,6 +48,10 @@ function normaliseImageUrls(value: unknown): string[] {
   return value.startsWith("http") ? [value] : [];
 }
 
+const COVER_IMAGE_MARKER = "#serenity-cover";
+const isCoverImage = (url: string) => url.endsWith(COVER_IMAGE_MARKER);
+const cleanCoverImageUrl = (url: string) => isCoverImage(url) ? url.slice(0, -COVER_IMAGE_MARKER.length) : url;
+
 const emptyForm = {
   name: "",
   description: "",
@@ -74,6 +78,8 @@ function AdminPage() {
   const [draggedPhotoKey, setDraggedPhotoKey] = useState<string | null>(null);
   const [videos, setVideos] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [coverImageKey, setCoverImageKey] = useState<string | null>(null);
+  const [existingCoverImageUrl, setExistingCoverImageUrl] = useState("");
   const [colourPhotoAssignments, setColourPhotoAssignments] = useState<Record<string, string>>({});
   const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -415,7 +421,22 @@ function AdminPage() {
     setPhotoOrder((current) => [...current, ...ids]);
   };
 
+  const setAsCoverPhoto = (key: string) => {
+    if (coverImageKey && coverImageKey !== key) {
+      setPhotoOrder((current) => current.includes(coverImageKey) ? current : [...current, coverImageKey]);
+    }
+    setPhotoOrder((current) => current.filter((item) => item !== key));
+    setColourPhotoAssignments((current) => Object.fromEntries(Object.entries(current).filter(([, value]) => value !== key)));
+    setCoverImageKey(key);
+    setExistingCoverImageUrl(key.startsWith("existing:") ? key.slice("existing:".length) : "");
+  };
+
   const removePhoto = (key: string) => {
+    if (key === coverImageKey) {
+      setCoverImageKey(null);
+      setExistingCoverImageUrl("");
+      return;
+    }
     if (key.startsWith("existing:")) {
       const url = key.slice("existing:".length);
       setExistingImages((current) => current.filter((item) => item !== url));
@@ -439,6 +460,8 @@ function AdminPage() {
     setDraggedPhotoKey(null);
     setVideos([]);
     setExistingImages([]);
+    setCoverImageKey(null);
+    setExistingCoverImageUrl("");
     setExistingVideos([]);
     setColourPhotoAssignments({});
   };
@@ -523,6 +546,7 @@ function AdminPage() {
       const newVideos = await uploadFiles(videos, "videos");
       const uploadedPhotoByKey = new Map<string, string>([
         ...existingImages.map((url) => [`existing:${url}`, url] as [string, string]),
+        ...(existingCoverImageUrl ? [[`existing:${existingCoverImageUrl}`, existingCoverImageUrl] as [string, string]] : []),
         ...newImages.map((url, index) => [newImageIds[index], url] as [string, string]),
       ]);
       const assignedColourPhotos = colourNames.map((colour) => uploadedPhotoByKey.get(colourPhotoAssignments[colour])).filter((url): url is string => Boolean(url));
@@ -540,7 +564,7 @@ function AdminPage() {
         sizes: form.sizes.split(",").map((item) => item.trim()).filter(Boolean),
         colours: form.colours.split(",").map((item) => item.trim()).filter(Boolean),
         stock_quantity: Math.max(0, Number.parseInt(form.stock_quantity || "0", 10)),
-        image_urls: orderedProductImages,
+        image_urls: [...(coverImageKey && uploadedPhotoByKey.get(coverImageKey) ? [`${uploadedPhotoByKey.get(coverImageKey)}${COVER_IMAGE_MARKER}`] : []), ...orderedProductImages],
         video_urls: [...existingVideos, ...newVideos],
         // Editing a listing must never silently unpublish it.
         is_published: editingId
@@ -594,12 +618,17 @@ function AdminPage() {
       is_published: product.is_published,
     });
     const savedImages = normaliseImageUrls(product.image_urls);
-    setExistingImages(savedImages);
+    const savedCover = savedImages.find(isCoverImage);
+    const productImages = savedImages.filter((url) => !isCoverImage(url));
+    const cleanCover = savedCover ? cleanCoverImageUrl(savedCover) : "";
+    setExistingImages(productImages);
+    setExistingCoverImageUrl(cleanCover);
+    setCoverImageKey(cleanCover ? `existing:${cleanCover}` : null);
     setNewImageIds([]);
-    setPhotoOrder(savedImages.map((url) => `existing:${url}`));
+    setPhotoOrder(productImages.map((url) => `existing:${url}`));
     setDraggedPhotoKey(null);
     const savedColours = normaliseStringArray(product.colours);
-    setColourPhotoAssignments(Object.fromEntries(savedColours.map((colour, index) => [colour, savedImages[index] ? `existing:${savedImages[index]}` : ""])));
+    setColourPhotoAssignments(Object.fromEntries(savedColours.map((colour, index) => [colour, productImages[index] ? `existing:${productImages[index]}` : ""])));
     setExistingVideos(normaliseStringArray(product.video_urls));
     setImages([]);
     setVideos([]);
@@ -666,8 +695,16 @@ function AdminPage() {
             <label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)
               <input type="file" accept="image/*" multiple onChange={(e) => { addSelectedImages(Array.from(e.target.files ?? [])); e.currentTarget.value = ""; }} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/>
             </label>
+            <div className="mt-3 rounded-xl border border-[#d9c8e0] bg-[#fcf8ff] p-3">
+              <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#4c1d67]">Cover page (optional)</p>
+              <p className="mt-1 text-[11px] leading-5 text-[#77677c]">Choose one photo as the cover. It is displayed first on the storefront but is excluded from product-photo numbering, dragging order, and colour matching.</p>
+              {coverImageKey ? <div className="mt-3 flex items-center gap-3">
+                <img src={coverImageKey.startsWith("existing:") ? existingCoverImageUrl : imagePreviews.find((item) => item.id === coverImageKey)?.url} alt="Product cover page" className="h-24 w-20 rounded-lg border border-[#eadff0] bg-white object-contain"/>
+                <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-[#4c1d67]">Cover page selected</p><p className="mt-1 text-[10px] text-[#77677c]">Not included in numbered product photos.</p><button type="button" onClick={() => removePhoto(coverImageKey)} className="mt-2 text-[10px] font-semibold text-[#6b2b83] underline">Remove cover</button></div>
+              </div> : <p className="mt-2 text-xs text-[#77677c]">No cover selected yet. Choose “Set as cover page” on any photo below.</p>}
+            </div>
             {photoOrder.length > 0 && <div className="mt-3">
-              <p className="mb-1 text-xs font-semibold text-[#5d4964]">Arrange product photos</p>
+              <p className="mb-1 text-xs font-semibold text-[#5d4964]">Arrange product photos (numbered separately)</p>
               <p className="mb-3 text-[11px] leading-5 text-[#77677c]">Drag any photo to change its position. The saved order is used on the storefront. You can also choose each colour's matching photo below.</p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {photoOrder.map((key, orderIndex) => {
@@ -680,6 +717,7 @@ function AdminPage() {
                   return <div key={key} draggable onDragStart={(event) => { setDraggedPhotoKey(key); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", key); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = draggedPhotoKey || event.dataTransfer.getData("text/plain"); if (source) movePhoto(source, key); setDraggedPhotoKey(null); }} onDragEnd={() => setDraggedPhotoKey(null)} className={`relative cursor-grab rounded-xl border bg-white p-2 active:cursor-grabbing ${draggedPhotoKey === key ? "opacity-40" : "border-[#eadff0]"}`}>
                     <div className="mb-2 flex items-center justify-between text-[10px] font-semibold text-[#6b2b83]"><span className="flex items-center gap-1"><GripVertical size={13}/> Drag to move</span><span>#{orderIndex + 1}</span></div>
                     <div className="relative"><img src={url} alt={file?.name || "Saved product photo"} className="aspect-[4/5] w-full rounded-lg border border-[#eadff0] bg-[#fbf8fc] object-contain"/><button type="button" aria-label="Remove photo" onClick={() => removePhoto(key)} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div>
+                    <button type="button" onClick={() => setAsCoverPhoto(key)} className={`mt-2 w-full rounded-full px-2 py-2 text-[10px] font-semibold ${coverImageKey === key ? "bg-[#4c1d67] text-white" : "border border-[#cdb8d7] text-[#5b2475]"}`}>{coverImageKey === key ? "Selected as cover" : "Set as cover page"}</button>
                     {file && <><button type="button" disabled={enhancingIndex !== null} onClick={() => void prepareProductImage(sourceIndex)} className="mt-2 w-full rounded-full border border-[#cdb8d7] px-2 py-2 text-[10px] font-semibold text-[#5b2475] disabled:opacity-50">{enhancingIndex === sourceIndex ? "Preparing…" : "Enhance & frame"}</button><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></>}
                     {!file && <p className="mt-2 text-center text-[10px] text-[#77677c]">Saved photo</p>}
                   </div>;
