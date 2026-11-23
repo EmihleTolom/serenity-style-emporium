@@ -43,7 +43,7 @@ function normaliseColourImageMap(value: unknown): Record<string, string> {
     if (!match) return [];
     let colour = match[1];
     try { colour = decodeURIComponent(colour); } catch { /* Keep the stored text if decoding fails. */ }
-    return [[colour, cleanStoredImageUrl(url)]];
+    return [[colour, cleanStoredImageUrl(url)] as [string, string]];
   }));
 }
 
