@@ -17,11 +17,12 @@ const removedProductNames = new Set(["adanna dress", "amahle dress", "imani set"
 
 
 function normaliseImageUrls(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+  const clean = (url: string) => url.endsWith("#serenity-cover") ? url.slice(0, -"#serenity-cover".length) : url;
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map(clean);
   if (typeof value !== "string" || !value.trim()) return [];
   try {
     const parsed: unknown = JSON.parse(value);
-    if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0);
+    if (Array.isArray(parsed)) return parsed.filter((item): item is string => typeof item === "string" && item.trim().length > 0).map(clean);
   } catch {
     // A single public URL may be stored as plain text rather than a JSON array.
   }
