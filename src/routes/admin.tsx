@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { LogOut, Plus, UploadCloud, X } from "lucide-react";
+import { GripVertical, LogOut, Plus, UploadCloud, X } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { ABOUT_IMAGE_CONFIG_PATH, ADMIN_USER_ID, PRODUCT_MEDIA_BUCKET, supabase } from "../lib/supabase";
 
@@ -69,6 +69,9 @@ function AdminPage() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [images, setImages] = useState<File[]>([]);
+  const [newImageIds, setNewImageIds] = useState<string[]>([]);
+  const [photoOrder, setPhotoOrder] = useState<string[]>([]);
+  const [draggedPhotoKey, setDraggedPhotoKey] = useState<string | null>(null);
   const [videos, setVideos] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [colourPhotoAssignments, setColourPhotoAssignments] = useState<Record<string, string>>({});
@@ -86,8 +89,8 @@ function AdminPage() {
   const [aboutImageBusy, setAboutImageBusy] = useState(false);
 
   const imagePreviews = useMemo(
-    () => images.map((file) => ({ file, url: URL.createObjectURL(file) })),
-    [images],
+    () => images.map((file, index) => ({ file, id: newImageIds[index], url: URL.createObjectURL(file) })),
+    [images, newImageIds],
   );
 
   useEffect(() => {
@@ -391,10 +394,49 @@ function AdminPage() {
     setBatchImages((current) => current.map((entry) => entry === item ? { ...entry, feedback } : entry));
   };
 
+  const movePhoto = (sourceKey: string, targetKey: string) => {
+    if (sourceKey === targetKey) return;
+    setPhotoOrder((current) => {
+      const from = current.indexOf(sourceKey);
+      const to = current.indexOf(targetKey);
+      if (from < 0 || to < 0) return current;
+      const next = [...current];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  };
+
+  const addSelectedImages = (files: File[]) => {
+    if (!files.length) return;
+    const ids = files.map(() => `new:${crypto.randomUUID()}`);
+    setImages((current) => [...current, ...files]);
+    setNewImageIds((current) => [...current, ...ids]);
+    setPhotoOrder((current) => [...current, ...ids]);
+  };
+
+  const removePhoto = (key: string) => {
+    if (key.startsWith("existing:")) {
+      const url = key.slice("existing:".length);
+      setExistingImages((current) => current.filter((item) => item !== url));
+    } else {
+      const index = newImageIds.indexOf(key);
+      if (index >= 0) {
+        setImages((current) => current.filter((_, itemIndex) => itemIndex !== index));
+        setNewImageIds((current) => current.filter((_, itemIndex) => itemIndex !== index));
+      }
+    }
+    setPhotoOrder((current) => current.filter((item) => item !== key));
+    setColourPhotoAssignments((current) => Object.fromEntries(Object.entries(current).filter(([, value]) => value !== key)));
+  };
+
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
     setImages([]);
+    setNewImageIds([]);
+    setPhotoOrder([]);
+    setDraggedPhotoKey(null);
     setVideos([]);
     setExistingImages([]);
     setExistingVideos([]);
@@ -447,7 +489,7 @@ function AdminPage() {
     }
     const productBeingEdited = editingId ? products.find((product) => product.id === editingId) : undefined;
     const colourNames = form.colours.split(",").map((item) => item.trim()).filter(Boolean);
-    const photoKeys = [...existingImages.map((url) => `existing:${url}`), ...images.map((_, index) => `new:${index}`)];
+    const photoKeys = photoOrder;
     if (colourNames.length > 0 && colourNames.some((colour) => !colourPhotoAssignments[colour] || !photoKeys.includes(colourPhotoAssignments[colour]))) {
       setMessage("Please assign a matching product photo to every colour before saving.");
       return;
@@ -481,13 +523,14 @@ function AdminPage() {
       const newVideos = await uploadFiles(videos, "videos");
       const uploadedPhotoByKey = new Map<string, string>([
         ...existingImages.map((url) => [`existing:${url}`, url] as [string, string]),
-        ...newImages.map((url, index) => [`new:${index}`, url] as [string, string]),
+        ...newImages.map((url, index) => [newImageIds[index], url] as [string, string]),
       ]);
       const assignedColourPhotos = colourNames.map((colour) => uploadedPhotoByKey.get(colourPhotoAssignments[colour])).filter((url): url is string => Boolean(url));
       const assignedPhotoSet = new Set(assignedColourPhotos);
+      const manuallyOrderedPhotos = photoOrder.map((key) => uploadedPhotoByKey.get(key)).filter((url): url is string => Boolean(url));
       const orderedProductImages = colourNames.length > 0
-        ? [...assignedColourPhotos, ...[...existingImages, ...newImages].filter((url) => !assignedPhotoSet.has(url))]
-        : [...existingImages, ...newImages];
+        ? [...assignedColourPhotos, ...manuallyOrderedPhotos.filter((url) => !assignedPhotoSet.has(url))]
+        : manuallyOrderedPhotos;
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
@@ -552,6 +595,9 @@ function AdminPage() {
     });
     const savedImages = normaliseImageUrls(product.image_urls);
     setExistingImages(savedImages);
+    setNewImageIds([]);
+    setPhotoOrder(savedImages.map((url) => `existing:${url}`));
+    setDraggedPhotoKey(null);
     const savedColours = normaliseStringArray(product.colours);
     setColourPhotoAssignments(Object.fromEntries(savedColours.map((colour, index) => [colour, savedImages[index] ? `existing:${savedImages[index]}` : ""])));
     setExistingVideos(normaliseStringArray(product.video_urls));
@@ -616,8 +662,32 @@ function AdminPage() {
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Sale/current price (R) — customer pays this"><input type="number" min="0" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="e.g. 450" className={fieldClass}/></Field><Field label="Regular/original price (R) — crossed-out price"><input type="number" min="0" step="0.01" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} placeholder="e.g. 550" className={fieldClass}/></Field></div><Field label="Category"><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={fieldClass}><option>Dresses</option><option>Sets</option><option>Pants</option><option>Accessories</option><option>Handbags</option><option>Other</option></select></Field><p className="text-xs leading-5 text-[#77677c]">When editing a regular-priced product, simply lower the sale/current price and the website will automatically keep the previous price as the crossed-out original price. If the product is already on sale, changing the sale price will keep its original price. You can also enter an original price manually.</p>
           <Field label="Sizes (separate with commas)"><input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} placeholder="XS, S, M, L, XL or One Size" className={fieldClass}/></Field>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Available colours (separate with commas)"><input value={form.colours} onChange={(e) => setForm({ ...form, colours: e.target.value })} placeholder="Pink, Blue, Purple, Yellow" className={fieldClass}/></Field><Field label="Stock quantity"><input type="number" min="0" step="1" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className={fieldClass}/></Field></div>
-          <div><label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)<input type="file" accept="image/*" multiple onChange={(e) => setImages((items) => [...items, ...Array.from(e.target.files ?? [])])} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{imagePreviews.length > 0 && <div className="mt-3"><p className="mb-1 text-xs font-semibold text-[#5d4964]">New photos — check these before saving</p><p className="mb-3 text-[11px] leading-5 text-[#77677c]">Use “Enhance & frame” to create a clean 4:5 product image with gentle lighting and colour adjustments. It keeps the entire garment visible rather than cutting off sleeves or hems. For colour variants, upload the product photos, then use “Match colours to photos” below to assign the exact photo for each colour. The upload order no longer matters.</p><div className="flex flex-wrap gap-4">{imagePreviews.map(({ file, url }, index) => <div key={url} className="w-28"><div className="relative"><img src={url} alt={file.name} className="h-36 w-28 rounded-lg border border-[#eadff0] bg-[#fbf8fc] object-contain"/><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setImages((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div><button type="button" disabled={enhancingIndex !== null} onClick={() => void prepareProductImage(index)} className="mt-2 w-full rounded-full border border-[#cdb8d7] px-2 py-2 text-[10px] font-semibold text-[#5b2475] disabled:opacity-50">{enhancingIndex === index ? "Preparing…" : "Enhance & frame"}</button><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></div>)}</div></div>}{existingImages.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Saved photos</p><div className="flex flex-wrap gap-2">{existingImages.map((url) => <div key={url} className="relative"><img src={url} alt="Product" className="h-16 w-14 rounded object-cover"/><button type="button" onClick={() => setExistingImages((items) => items.filter((item) => item !== url))} className="absolute -right-1 -top-1 rounded-full bg-white p-1 shadow"><X size={12}/></button></div>)}</div></div>}</div>
-          {form.colours.split(",").map((item) => item.trim()).filter(Boolean).length > 0 && <div className="rounded-xl border border-[#d9c8e0] bg-[#fcf8ff] p-4"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[#4c1d67]">Match colours to photos</p><p className="mt-1 text-[11px] leading-5 text-[#77677c]">Choose the exact photo customers should see when they select each colour. These assignments are saved with the product.</p><div className="mt-3 space-y-3">{form.colours.split(",").map((item) => item.trim()).filter(Boolean).map((colour) => <label key={colour} className="flex flex-col gap-2 text-xs font-semibold text-[#5d4964] sm:flex-row sm:items-center sm:justify-between"><span>{colour}</span><select value={colourPhotoAssignments[colour] || ""} onChange={(event) => setColourPhotoAssignments((current) => ({ ...current, [colour]: event.target.value }))} className="w-full rounded-lg border border-[#d9c8e0] bg-white px-3 py-2 text-xs sm:max-w-xs"><option value="">Choose matching photo…</option>{existingImages.map((url, index) => <option key={`existing:${url}`} value={`existing:${url}`}>Saved photo {index + 1}</option>)}{imagePreviews.map((preview, index) => <option key={`new:${index}`} value={`new:${index}`}>New photo {index + 1} — {images[index]?.name || "Upload"}</option>)}</select></label>)}</div></div>}<div><label className="block text-xs font-semibold text-[#5d4964]">Product videos (optional)<input type="file" accept="video/*" multiple onChange={(e) => setVideos(Array.from(e.target.files ?? []))} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{videos.length > 0 && <p className="mt-2 text-xs text-[#77677c]">{videos.length} video(s) selected</p>}{existingVideos.length > 0 && <div className="mt-3 space-y-1">{existingVideos.map((url) => <div key={url} className="flex items-center justify-between gap-2 text-xs"><a href={url} target="_blank" rel="noreferrer" className="truncate text-[#6b2b83] underline">View existing video</a><button type="button" onClick={() => setExistingVideos((items) => items.filter((item) => item !== url))} className="text-[#6b2b83]">Remove</button></div>)}</div>}</div>
+          <div>
+            <label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)
+              <input type="file" accept="image/*" multiple onChange={(e) => { addSelectedImages(Array.from(e.target.files ?? [])); e.currentTarget.value = ""; }} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/>
+            </label>
+            {photoOrder.length > 0 && <div className="mt-3">
+              <p className="mb-1 text-xs font-semibold text-[#5d4964]">Arrange product photos</p>
+              <p className="mb-3 text-[11px] leading-5 text-[#77677c]">Drag any photo to change its position. The saved order is used on the storefront. You can also choose each colour's matching photo below.</p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {photoOrder.map((key, orderIndex) => {
+                  const isExisting = key.startsWith("existing:");
+                  const url = isExisting ? key.slice("existing:".length) : imagePreviews.find((preview) => preview.id === key)?.url;
+                  const preview = imagePreviews.find((item) => item.id === key);
+                  const file = preview?.file;
+                  const sourceIndex = newImageIds.indexOf(key);
+                  if (!url) return null;
+                  return <div key={key} draggable onDragStart={(event) => { setDraggedPhotoKey(key); event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", key); }} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); const source = draggedPhotoKey || event.dataTransfer.getData("text/plain"); if (source) movePhoto(source, key); setDraggedPhotoKey(null); }} onDragEnd={() => setDraggedPhotoKey(null)} className={`relative cursor-grab rounded-xl border bg-white p-2 active:cursor-grabbing ${draggedPhotoKey === key ? "opacity-40" : "border-[#eadff0]"}`}>
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-semibold text-[#6b2b83]"><span className="flex items-center gap-1"><GripVertical size={13}/> Drag to move</span><span>#{orderIndex + 1}</span></div>
+                    <div className="relative"><img src={url} alt={file?.name || "Saved product photo"} className="aspect-[4/5] w-full rounded-lg border border-[#eadff0] bg-[#fbf8fc] object-contain"/><button type="button" aria-label="Remove photo" onClick={() => removePhoto(key)} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div>
+                    {file && <><button type="button" disabled={enhancingIndex !== null} onClick={() => void prepareProductImage(sourceIndex)} className="mt-2 w-full rounded-full border border-[#cdb8d7] px-2 py-2 text-[10px] font-semibold text-[#5b2475] disabled:opacity-50">{enhancingIndex === sourceIndex ? "Preparing…" : "Enhance & frame"}</button><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></>}
+                    {!file && <p className="mt-2 text-center text-[10px] text-[#77677c]">Saved photo</p>}
+                  </div>;
+                })}
+              </div>
+            </div>}
+          </div>
+          {form.colours.split(",").map((item) => item.trim()).filter(Boolean).length > 0 && <div className="rounded-xl border border-[#d9c8e0] bg-[#fcf8ff] p-4"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[#4c1d67]">Match colours to photos</p><p className="mt-1 text-[11px] leading-5 text-[#77677c]">Choose the exact photo customers should see when they select each colour. These assignments are saved with the product.</p><div className="mt-3 space-y-3">{form.colours.split(",").map((item) => item.trim()).filter(Boolean).map((colour) => <label key={colour} className="flex flex-col gap-2 text-xs font-semibold text-[#5d4964] sm:flex-row sm:items-center sm:justify-between"><span>{colour}</span><select value={colourPhotoAssignments[colour] || ""} onChange={(event) => setColourPhotoAssignments((current) => ({ ...current, [colour]: event.target.value }))} className="w-full rounded-lg border border-[#d9c8e0] bg-white px-3 py-2 text-xs sm:max-w-xs"><option value="">Choose matching photo…</option>{photoOrder.map((key, index) => { const isExisting = key.startsWith("existing:"); const label = isExisting ? `Saved photo ${index + 1}` : `New photo ${index + 1} — ${images[newImageIds.indexOf(key)]?.name || "Upload"}`; return <option key={key} value={key}>{label}</option>; })}</select></label>)}</div></div>}<div><label className="block text-xs font-semibold text-[#5d4964]">Product videos (optional)<input type="file" accept="video/*" multiple onChange={(e) => setVideos(Array.from(e.target.files ?? []))} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{videos.length > 0 && <p className="mt-2 text-xs text-[#77677c]">{videos.length} video(s) selected</p>}{existingVideos.length > 0 && <div className="mt-3 space-y-1">{existingVideos.map((url) => <div key={url} className="flex items-center justify-between gap-2 text-xs"><a href={url} target="_blank" rel="noreferrer" className="truncate text-[#6b2b83] underline">View existing video</a><button type="button" onClick={() => setExistingVideos((items) => items.filter((item) => item !== url))} className="text-[#6b2b83]">Remove</button></div>)}</div>}</div>
           <label className="flex items-center gap-3 rounded-lg bg-[#fcf8ff] p-3 text-sm text-[#4c1d67]"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} className="h-4 w-4 accent-[#5b2475]"/> Publish this product on the storefront</label>
           <button disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#4c1d67] px-5 py-3.5 text-sm font-semibold text-white disabled:opacity-60"><UploadCloud size={17}/>{busy ? "Saving product…" : editingId ? "Save changes" : "Save product"}</button>
         </form>
