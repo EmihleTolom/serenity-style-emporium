@@ -71,6 +71,7 @@ function AdminPage() {
   const [images, setImages] = useState<File[]>([]);
   const [videos, setVideos] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [colourPhotoAssignments, setColourPhotoAssignments] = useState<Record<string, string>>({});
   const [existingVideos, setExistingVideos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
@@ -397,6 +398,7 @@ function AdminPage() {
     setVideos([]);
     setExistingImages([]);
     setExistingVideos([]);
+    setColourPhotoAssignments({});
   };
 
   const signIn = async (event: FormEvent<HTMLFormElement>) => {
@@ -444,6 +446,21 @@ function AdminPage() {
       return;
     }
     const productBeingEdited = editingId ? products.find((product) => product.id === editingId) : undefined;
+    const colourNames = form.colours.split(",").map((item) => item.trim()).filter(Boolean);
+    const photoKeys = [...existingImages.map((url) => `existing:${url}`), ...images.map((_, index) => `new:${index}`)];
+    if (colourNames.length > 0 && colourNames.some((colour) => !colourPhotoAssignments[colour] || !photoKeys.includes(colourPhotoAssignments[colour]))) {
+      setMessage("Please assign a matching product photo to every colour before saving.");
+      return;
+    }
+    if (new Set(colourNames).size !== colourNames.length) {
+      setMessage("Please make each colour name unique so its matching photo can be selected correctly.");
+      return;
+    }
+    const selectedPhotoKeys = colourNames.map((colour) => colourPhotoAssignments[colour]);
+    if (new Set(selectedPhotoKeys).size !== selectedPhotoKeys.length) {
+      setMessage("Each colour must have its own matching photo. Please do not assign the same photo to multiple colours.");
+      return;
+    }
     const enteredOriginalPrice = form.original_price.trim() ? Number(form.original_price) : null;
     // When a regular-priced product is reduced, automatically retain its previous price as the crossed-out price.
     // When it is already on sale, keep its existing original price while the sale price is edited.
@@ -462,6 +479,15 @@ function AdminPage() {
     try {
       const newImages = await uploadFiles(images, "images");
       const newVideos = await uploadFiles(videos, "videos");
+      const uploadedPhotoByKey = new Map<string, string>([
+        ...existingImages.map((url) => [`existing:${url}`, url] as [string, string]),
+        ...newImages.map((url, index) => [`new:${index}`, url] as [string, string]),
+      ]);
+      const assignedColourPhotos = colourNames.map((colour) => uploadedPhotoByKey.get(colourPhotoAssignments[colour])).filter((url): url is string => Boolean(url));
+      const assignedPhotoSet = new Set(assignedColourPhotos);
+      const orderedProductImages = colourNames.length > 0
+        ? [...assignedColourPhotos, ...[...existingImages, ...newImages].filter((url) => !assignedPhotoSet.has(url))]
+        : [...existingImages, ...newImages];
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
@@ -471,7 +497,7 @@ function AdminPage() {
         sizes: form.sizes.split(",").map((item) => item.trim()).filter(Boolean),
         colours: form.colours.split(",").map((item) => item.trim()).filter(Boolean),
         stock_quantity: Math.max(0, Number.parseInt(form.stock_quantity || "0", 10)),
-        image_urls: [...existingImages, ...newImages],
+        image_urls: orderedProductImages,
         video_urls: [...existingVideos, ...newVideos],
         // Editing a listing must never silently unpublish it.
         is_published: editingId
@@ -524,7 +550,10 @@ function AdminPage() {
       stock_quantity: String(product.stock_quantity ?? 0),
       is_published: product.is_published,
     });
-    setExistingImages(normaliseImageUrls(product.image_urls));
+    const savedImages = normaliseImageUrls(product.image_urls);
+    setExistingImages(savedImages);
+    const savedColours = normaliseStringArray(product.colours);
+    setColourPhotoAssignments(Object.fromEntries(savedColours.map((colour, index) => [colour, savedImages[index] ? `existing:${savedImages[index]}` : ""])));
     setExistingVideos(normaliseStringArray(product.video_urls));
     setImages([]);
     setVideos([]);
@@ -586,9 +615,9 @@ function AdminPage() {
           <div><div className="mb-2 flex flex-wrap items-center justify-between gap-2"><label className="text-xs font-semibold text-[#5d4964]">Description</label><button type="button" onClick={() => void generateDescription()} disabled={generatingDescription || !form.name.trim()} className="rounded-full border border-[#cdb8d7] px-3 py-2 text-[11px] font-semibold text-[#5b2475] hover:bg-[#fcf8ff] disabled:cursor-not-allowed disabled:opacity-50">{generatingDescription ? "Generating…" : "✦ Generate Description"}</button></div><textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Write a description or generate one using AI…" className={fieldClass}/><p className="mt-1 text-[11px] leading-5 text-[#77677c]">AI-generated text is a draft. Check that it accurately describes the product before saving.</p></div>
           <div className="grid gap-4 sm:grid-cols-2"><Field label="Sale/current price (R) — customer pays this"><input type="number" min="0" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="e.g. 450" className={fieldClass}/></Field><Field label="Regular/original price (R) — crossed-out price"><input type="number" min="0" step="0.01" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} placeholder="e.g. 550" className={fieldClass}/></Field></div><Field label="Category"><select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={fieldClass}><option>Dresses</option><option>Sets</option><option>Pants</option><option>Accessories</option><option>Handbags</option><option>Other</option></select></Field><p className="text-xs leading-5 text-[#77677c]">When editing a regular-priced product, simply lower the sale/current price and the website will automatically keep the previous price as the crossed-out original price. If the product is already on sale, changing the sale price will keep its original price. You can also enter an original price manually.</p>
           <Field label="Sizes (separate with commas)"><input value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} placeholder="XS, S, M, L, XL or One Size" className={fieldClass}/></Field>
-          <div className="grid gap-4 sm:grid-cols-2"><Field label="Available colours (separate with commas, in photo order)"><input value={form.colours} onChange={(e) => setForm({ ...form, colours: e.target.value })} placeholder="Pink, Blue, Purple, Yellow" className={fieldClass}/></Field><Field label="Stock quantity"><input type="number" min="0" step="1" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className={fieldClass}/></Field></div>
+          <div className="grid gap-4 sm:grid-cols-2"><Field label="Available colours (separate with commas)"><input value={form.colours} onChange={(e) => setForm({ ...form, colours: e.target.value })} placeholder="Pink, Blue, Purple, Yellow" className={fieldClass}/></Field><Field label="Stock quantity"><input type="number" min="0" step="1" value={form.stock_quantity} onChange={(e) => setForm({ ...form, stock_quantity: e.target.value })} className={fieldClass}/></Field></div>
           <div><label className="block text-xs font-semibold text-[#5d4964]">Product photos (you can select multiple)<input type="file" accept="image/*" multiple onChange={(e) => setImages((items) => [...items, ...Array.from(e.target.files ?? [])])} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{imagePreviews.length > 0 && <div className="mt-3"><p className="mb-1 text-xs font-semibold text-[#5d4964]">New photos — check these before saving</p><p className="mb-3 text-[11px] leading-5 text-[#77677c]">Use “Enhance & frame” to create a clean 4:5 product image with gentle lighting and colour adjustments. It keeps the entire garment visible rather than cutting off sleeves or hems. For colour variants, enter colours above in the same order as the photos below (for example Pink, Blue, Purple, Yellow), and upload one matching photo per colour. Customers will select a colour to see its matching photo. The number and order of colours and photos must match.</p><div className="flex flex-wrap gap-4">{imagePreviews.map(({ file, url }, index) => <div key={url} className="w-28"><div className="relative"><img src={url} alt={file.name} className="h-36 w-28 rounded-lg border border-[#eadff0] bg-[#fbf8fc] object-contain"/><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setImages((items) => items.filter((_, itemIndex) => itemIndex !== index))} className="absolute -right-2 -top-2 rounded-full bg-white p-1.5 text-[#6b2b83] shadow"><X size={13}/></button></div><button type="button" disabled={enhancingIndex !== null} onClick={() => void prepareProductImage(index)} className="mt-2 w-full rounded-full border border-[#cdb8d7] px-2 py-2 text-[10px] font-semibold text-[#5b2475] disabled:opacity-50">{enhancingIndex === index ? "Preparing…" : "Enhance & frame"}</button><p className="mt-1 truncate text-[10px] text-[#77677c]" title={file.name}>{file.name}</p></div>)}</div></div>}{existingImages.length > 0 && <div className="mt-3"><p className="mb-2 text-xs font-semibold text-[#5d4964]">Saved photos</p><div className="flex flex-wrap gap-2">{existingImages.map((url) => <div key={url} className="relative"><img src={url} alt="Product" className="h-16 w-14 rounded object-cover"/><button type="button" onClick={() => setExistingImages((items) => items.filter((item) => item !== url))} className="absolute -right-1 -top-1 rounded-full bg-white p-1 shadow"><X size={12}/></button></div>)}</div></div>}</div>
-          <div><label className="block text-xs font-semibold text-[#5d4964]">Product videos (optional)<input type="file" accept="video/*" multiple onChange={(e) => setVideos(Array.from(e.target.files ?? []))} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{videos.length > 0 && <p className="mt-2 text-xs text-[#77677c]">{videos.length} video(s) selected</p>}{existingVideos.length > 0 && <div className="mt-3 space-y-1">{existingVideos.map((url) => <div key={url} className="flex items-center justify-between gap-2 text-xs"><a href={url} target="_blank" rel="noreferrer" className="truncate text-[#6b2b83] underline">View existing video</a><button type="button" onClick={() => setExistingVideos((items) => items.filter((item) => item !== url))} className="text-[#6b2b83]">Remove</button></div>)}</div>}</div>
+          {form.colours.split(",").map((item) => item.trim()).filter(Boolean).length > 0 && <div className="rounded-xl border border-[#d9c8e0] bg-[#fcf8ff] p-4"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[#4c1d67]">Match colours to photos</p><p className="mt-1 text-[11px] leading-5 text-[#77677c]">Choose the exact photo customers should see when they select each colour. These assignments are saved with the product.</p><div className="mt-3 space-y-3">{form.colours.split(",").map((item) => item.trim()).filter(Boolean).map((colour) => <label key={colour} className="flex flex-col gap-2 text-xs font-semibold text-[#5d4964] sm:flex-row sm:items-center sm:justify-between"><span>{colour}</span><select value={colourPhotoAssignments[colour] || ""} onChange={(event) => setColourPhotoAssignments((current) => ({ ...current, [colour]: event.target.value }))} className="w-full rounded-lg border border-[#d9c8e0] bg-white px-3 py-2 text-xs sm:max-w-xs"><option value="">Choose matching photo…</option>{existingImages.map((url, index) => <option key={`existing:${url}`} value={`existing:${url}`}>Saved photo {index + 1}</option>)}{imagePreviews.map((preview, index) => <option key={`new:${index}`} value={`new:${index}`}>New photo {index + 1} — {images[index]?.name || "Upload"}</option>)}</select></label>)}</div></div>}<div><label className="block text-xs font-semibold text-[#5d4964]">Product videos (optional)<input type="file" accept="video/*" multiple onChange={(e) => setVideos(Array.from(e.target.files ?? []))} className="mt-2 block w-full rounded-lg border border-dashed border-[#cdb8d7] bg-[#fcf8ff] p-3 text-xs"/></label>{videos.length > 0 && <p className="mt-2 text-xs text-[#77677c]">{videos.length} video(s) selected</p>}{existingVideos.length > 0 && <div className="mt-3 space-y-1">{existingVideos.map((url) => <div key={url} className="flex items-center justify-between gap-2 text-xs"><a href={url} target="_blank" rel="noreferrer" className="truncate text-[#6b2b83] underline">View existing video</a><button type="button" onClick={() => setExistingVideos((items) => items.filter((item) => item !== url))} className="text-[#6b2b83]">Remove</button></div>)}</div>}</div>
           <label className="flex items-center gap-3 rounded-lg bg-[#fcf8ff] p-3 text-sm text-[#4c1d67]"><input type="checkbox" checked={form.is_published} onChange={(e) => setForm({ ...form, is_published: e.target.checked })} className="h-4 w-4 accent-[#5b2475]"/> Publish this product on the storefront</label>
           <button disabled={busy} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#4c1d67] px-5 py-3.5 text-sm font-semibold text-white disabled:opacity-60"><UploadCloud size={17}/>{busy ? "Saving product…" : editingId ? "Save changes" : "Save product"}</button>
         </form>
