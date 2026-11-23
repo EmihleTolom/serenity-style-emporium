@@ -26,7 +26,7 @@ function normaliseImageUrls(value: unknown): string[] {
   } catch {
     // A single public URL may be stored as plain text rather than a JSON array.
   }
-  return value.startsWith("http") ? [value] : [];
+  return value.startsWith("http") ? [clean(value)] : [];
 }
 
 function normaliseColours(value: unknown): string[] {
