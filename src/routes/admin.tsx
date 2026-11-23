@@ -49,8 +49,21 @@ function normaliseImageUrls(value: unknown): string[] {
 }
 
 const COVER_IMAGE_MARKER = "#serenity-cover";
-const isCoverImage = (url: string) => url.endsWith(COVER_IMAGE_MARKER);
-const cleanCoverImageUrl = (url: string) => isCoverImage(url) ? url.slice(0, -COVER_IMAGE_MARKER.length) : url;
+const COLOUR_IMAGE_MARKER = "#serenity-colour=";
+const isCoverImage = (url: string) => url.includes(COVER_IMAGE_MARKER);
+const cleanStoredImageUrl = (url: string) => url.split("#")[0];
+const cleanCoverImageUrl = cleanStoredImageUrl;
+const getStoredImageColour = (url: string) => {
+  const match = url.match(/#serenity-colour=([^&]+)/);
+  if (!match) return "";
+  try { return decodeURIComponent(match[1]); } catch { return match[1]; }
+};
+const withStoredImageColour = (url: string, colour: string) =>
+  colour ? `${cleanStoredImageUrl(url)}${COLOUR_IMAGE_MARKER}${encodeURIComponent(colour)}` : cleanStoredImageUrl(url);
+const replaceStoredImageUrl = (storedUrl: string, nextUrl: string) => {
+  const colour = getStoredImageColour(storedUrl);
+  return isCoverImage(storedUrl) ? `${nextUrl}${COVER_IMAGE_MARKER}` : withStoredImageColour(nextUrl, colour);
+};
 
 const emptyForm = {
   name: "",
@@ -264,7 +277,7 @@ function AdminPage() {
     setMessage("");
     const prepared: BatchImage[] = [];
     const targets = products.flatMap((product) =>
-      normaliseImageUrls(product.image_urls).map((url, imageIndex) => ({ product, url, imageIndex })),
+      normaliseImageUrls(product.image_urls).map((url, imageIndex) => ({ product, url: cleanStoredImageUrl(url), imageIndex })),
     );
     try {
       if (targets.length === 0) throw new Error("There are no saved product photos to standardise.");
@@ -328,7 +341,7 @@ function AdminPage() {
       const { data } = supabase.storage.from(PRODUCT_MEDIA_BUCKET).getPublicUrl(path);
       const product = products.find((entry) => entry.id === item.productId);
       if (!product) throw new Error("This product could not be found. Refresh the product list and try again.");
-      const nextUrls = normaliseImageUrls(product.image_urls).map((url, index) => index === item.imageIndex ? data.publicUrl : url);
+      const nextUrls = normaliseImageUrls(product.image_urls).map((url, index) => index === item.imageIndex ? replaceStoredImageUrl(url, data.publicUrl) : url);
       const { error } = await supabase.from("products").update({ image_urls: nextUrls, updated_at: new Date().toISOString() }).eq("id", item.productId);
       if (error) throw error;
       URL.revokeObjectURL(item.previewUrl);
@@ -376,7 +389,7 @@ function AdminPage() {
         const { data: currentProduct, error: readError } = await supabase.from("products").select("image_urls").eq("id", item.productId).single();
         if (readError || !currentProduct) throw readError || new Error(`Could not find ${item.productName}.`);
         const currentUrls = normaliseImageUrls(currentProduct.image_urls);
-        const nextUrls = currentUrls.map((url, index) => index === item.imageIndex ? data.publicUrl : url);
+        const nextUrls = currentUrls.map((url, index) => index === item.imageIndex ? replaceStoredImageUrl(url, data.publicUrl) : url);
         const { error } = await supabase.from("products").update({ image_urls: nextUrls, updated_at: new Date().toISOString() }).eq("id", item.productId);
         if (error) throw error;
         applied += 1;
@@ -556,12 +569,18 @@ function AdminPage() {
         ...(existingCoverImageUrl ? [[`existing:${existingCoverImageUrl}`, existingCoverImageUrl] as [string, string]] : []),
         ...newImages.map((url, index) => [newImageIds[index], url] as [string, string]),
       ]);
-      const assignedColourPhotos = colourNames.map((colour) => uploadedPhotoByKey.get(colourPhotoAssignments[colour])).filter((url): url is string => Boolean(url));
-      const assignedPhotoSet = new Set(assignedColourPhotos);
-      const manuallyOrderedPhotos = photoOrder.map((key) => uploadedPhotoByKey.get(key)).filter((url): url is string => Boolean(url));
-      const orderedProductImages = colourNames.length > 0
-        ? [...assignedColourPhotos, ...manuallyOrderedPhotos.filter((url) => !assignedPhotoSet.has(url))]
-        : manuallyOrderedPhotos;
+      // The manually arranged photo order is authoritative. Colour matching is
+      // stored as metadata on each image URL so it never changes gallery order.
+      const colourByPhotoKey = new Map(
+        Object.entries(colourPhotoAssignments).map(([colour, key]) => [key, colour]),
+      );
+      const orderedProductImages = photoOrder
+        .map((key) => {
+          const url = uploadedPhotoByKey.get(key);
+          if (!url) return null;
+          return withStoredImageColour(url, colourByPhotoKey.get(key) || "");
+        })
+        .filter((url): url is string => Boolean(url));
       const payload = {
         name: form.name.trim(),
         description: form.description.trim(),
@@ -626,7 +645,7 @@ function AdminPage() {
     });
     const savedImages = normaliseImageUrls(product.image_urls);
     const savedCover = savedImages.find(isCoverImage);
-    const productImages = savedImages.filter((url) => !isCoverImage(url));
+    const productImages = savedImages.filter((url) => !isCoverImage(url)).map(cleanStoredImageUrl);
     const cleanCover = savedCover ? cleanCoverImageUrl(savedCover) : "";
     setExistingImages(productImages);
     setExistingCoverImageUrl(cleanCover);
@@ -635,7 +654,16 @@ function AdminPage() {
     setPhotoOrder(productImages.map((url) => `existing:${url}`));
     setDraggedPhotoKey(null);
     const savedColours = normaliseStringArray(product.colours);
-    setColourPhotoAssignments(Object.fromEntries(savedColours.map((colour, index) => [colour, productImages[index] ? `existing:${productImages[index]}` : ""])));
+    const storedAssignments = Object.fromEntries(
+      savedImages.filter((url) => !isCoverImage(url) && getStoredImageColour(url))
+        .map((url) => [getStoredImageColour(url), `existing:${cleanStoredImageUrl(url)}`]),
+    );
+    // Older products did not store explicit colour-to-photo metadata. Preserve
+    // their former positional mapping until the next save writes explicit links.
+    setColourPhotoAssignments(Object.fromEntries(savedColours.map((colour, index) => [
+      colour,
+      storedAssignments[colour] || (productImages[index] ? `existing:${productImages[index]}` : ""),
+    ])));
     setExistingVideos(normaliseStringArray(product.video_urls));
     setImages([]);
     setVideos([]);
